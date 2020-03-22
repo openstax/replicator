@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -e
+eslint src/**/*.ts test/**/*.ts $( [[ "${FIX:-false}" = true ]] && echo '--fix' )
+echo -e "\\n\\033[1;32mLINT SUCCESS\\033[0m\\n"
