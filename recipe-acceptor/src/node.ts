@@ -23,7 +23,7 @@ export class QualifiedName {
 
   toRequest(): string {
     return JSON.stringify(
-      { namespace: this.uri, local_name: this.localName }
+      { uri: this.uri, local_name: this.localName }
     )
   }
 
@@ -50,17 +50,17 @@ export class Attribute {
 
 const selectionRequest = (nodeID: number, selector: string): string => {
   return JSON.stringify({
-    ElementRequest: { node_id: nodeID, selector: selector }
+    Selection: { node_id: nodeID, selector: selector }
   })
 }
 const textRequest = (nodeID: number): string => {
   return JSON.stringify({
-    TextRequest: { node_id: nodeID }
+    Text: { node_id: nodeID }
   })
 }
 const attributeRequest = (nodeID: number): string => {
   return JSON.stringify({
-    AttributeRequest: { node_id: nodeID }
+    Attributes: { node_id: nodeID }
   })
 }
 const reportResultRequest = (results: Array<TransformResult>): string => {
@@ -82,11 +82,13 @@ const reportCountRequest = (count: number): string => {
   })
 }
 const reportComplete = (): string => {
-  return 'PutComplete'
+  return JSON.stringify({
+    PutComplete: null
+  })
 }
 const reportErrorRequest = (error: Error): string => {
   return JSON.stringify({
-    PutError: { error }
+    PutError: { message: error.toString() }
   })
 }
 
@@ -98,15 +100,24 @@ export class UnixSocketBroker implements Broker {
   }
 
   async select(nodeID: number, selector: string): Promise<Array<Node>> {
-    return this.socketConnection(selectionRequest(nodeID, selector))
+    const response = await this.socketConnection(selectionRequest(nodeID, selector))
+    return response.Selection.elements.map((element: any) => {
+      const qName = element.qualified_name
+      return new Node(element.node_id, new QualifiedName(qName.local_name, qName.uri), this)
+    })
   }
 
   async getText(nodeID: number): Promise<string> {
-    return this.socketConnection(textRequest(nodeID))
+    const response = await this.socketConnection(textRequest(nodeID))
+    return response.Text.text
   }
 
   async getAttributes(nodeID: number): Promise<Array<Attribute>> {
-    return this.socketConnection(attributeRequest(nodeID))
+    const response = await this.socketConnection(attributeRequest(nodeID))
+    return response.Attributes.attributes.map((attribute: any) => {
+      const qName = attribute.qualified_name
+      return new Attribute(new QualifiedName(qName.local_name, qName.uri), attribute.value)
+    })
   }
 
   async getRoot(): Promise<Node> {
