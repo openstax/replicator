@@ -100,7 +100,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "packageDependencies": [
             ["@types/async", "npm:3.0.8"],
             ["@types/js-yaml", "npm:3.12.2"],
-            ["@types/lodash", "npm:4.14.149"],
             ["@types/node", "npm:13.9.1"],
             ["@typescript-eslint/eslint-plugin", "virtual:472a02c768ce7382d0c098f2a6965290d526a5adc034566d89078c7df2e634ef246b6bf0267238e0a8234ebdab3389553d0186f412d34e6879a9f1d288f81518#npm:2.23.0"],
             ["@typescript-eslint/parser", "virtual:472a02c768ce7382d0c098f2a6965290d526a5adc034566d89078c7df2e634ef246b6bf0267238e0a8234ebdab3389553d0186f412d34e6879a9f1d288f81518#npm:2.23.0"],
@@ -115,9 +114,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["eslint-plugin-promise", "npm:4.2.1"],
             ["eslint-plugin-standard", "virtual:472a02c768ce7382d0c098f2a6965290d526a5adc034566d89078c7df2e634ef246b6bf0267238e0a8234ebdab3389553d0186f412d34e6879a9f1d288f81518#npm:4.0.1"],
             ["js-yaml", "npm:3.13.1"],
-            ["lodash", "npm:4.17.15"],
             ["nyc", "npm:15.0.0"],
-            ["protobufjs", "npm:6.8.9"],
             ["ts-node", "virtual:472a02c768ce7382d0c098f2a6965290d526a5adc034566d89078c7df2e634ef246b6bf0267238e0a8234ebdab3389553d0186f412d34e6879a9f1d288f81518#npm:8.7.0"],
             ["typescript", "patch:typescript@npm%3A3.8.3#builtin<compat/typescript>::version=3.8.3&hash=226bd1"]
           ],
@@ -341,98 +338,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"
         }]
       ]],
-      ["@protobufjs/aspromise", [
-        ["npm:1.1.2", {
-          "packageLocation": "./.yarn/cache/@protobufjs-aspromise-npm-1.1.2-71d00b938f-1.zip/node_modules/@protobufjs/aspromise/",
-          "packageDependencies": [
-            ["@protobufjs/aspromise", "npm:1.1.2"]
-          ],
-          "linkType": "HARD"
-        }]
-      ]],
-      ["@protobufjs/base64", [
-        ["npm:1.1.2", {
-          "packageLocation": "./.yarn/cache/@protobufjs-base64-npm-1.1.2-cd8ca6814a-1.zip/node_modules/@protobufjs/base64/",
-          "packageDependencies": [
-            ["@protobufjs/base64", "npm:1.1.2"]
-          ],
-          "linkType": "HARD"
-        }]
-      ]],
-      ["@protobufjs/codegen", [
-        ["npm:2.0.4", {
-          "packageLocation": "./.yarn/cache/@protobufjs-codegen-npm-2.0.4-36e188bbe6-1.zip/node_modules/@protobufjs/codegen/",
-          "packageDependencies": [
-            ["@protobufjs/codegen", "npm:2.0.4"]
-          ],
-          "linkType": "HARD"
-        }]
-      ]],
-      ["@protobufjs/eventemitter", [
-        ["npm:1.1.0", {
-          "packageLocation": "./.yarn/cache/@protobufjs-eventemitter-npm-1.1.0-029cc7d431-1.zip/node_modules/@protobufjs/eventemitter/",
-          "packageDependencies": [
-            ["@protobufjs/eventemitter", "npm:1.1.0"]
-          ],
-          "linkType": "HARD"
-        }]
-      ]],
-      ["@protobufjs/fetch", [
-        ["npm:1.1.0", {
-          "packageLocation": "./.yarn/cache/@protobufjs-fetch-npm-1.1.0-ca857b7df4-1.zip/node_modules/@protobufjs/fetch/",
-          "packageDependencies": [
-            ["@protobufjs/fetch", "npm:1.1.0"],
-            ["@protobufjs/aspromise", "npm:1.1.2"],
-            ["@protobufjs/inquire", "npm:1.1.0"]
-          ],
-          "linkType": "HARD"
-        }]
-      ]],
-      ["@protobufjs/float", [
-        ["npm:1.0.2", {
-          "packageLocation": "./.yarn/cache/@protobufjs-float-npm-1.0.2-5678f64d08-1.zip/node_modules/@protobufjs/float/",
-          "packageDependencies": [
-            ["@protobufjs/float", "npm:1.0.2"]
-          ],
-          "linkType": "HARD"
-        }]
-      ]],
-      ["@protobufjs/inquire", [
-        ["npm:1.1.0", {
-          "packageLocation": "./.yarn/cache/@protobufjs-inquire-npm-1.1.0-3c7759e9ce-1.zip/node_modules/@protobufjs/inquire/",
-          "packageDependencies": [
-            ["@protobufjs/inquire", "npm:1.1.0"]
-          ],
-          "linkType": "HARD"
-        }]
-      ]],
-      ["@protobufjs/path", [
-        ["npm:1.1.2", {
-          "packageLocation": "./.yarn/cache/@protobufjs-path-npm-1.1.2-641d08de76-1.zip/node_modules/@protobufjs/path/",
-          "packageDependencies": [
-            ["@protobufjs/path", "npm:1.1.2"]
-          ],
-          "linkType": "HARD"
-        }]
-      ]],
-      ["@protobufjs/pool", [
-        ["npm:1.1.0", {
-          "packageLocation": "./.yarn/cache/@protobufjs-pool-npm-1.1.0-47a76f96a1-1.zip/node_modules/@protobufjs/pool/",
-          "packageDependencies": [
-            ["@protobufjs/pool", "npm:1.1.0"]
-          ],
-          "linkType": "HARD"
-        }]
-      ]],
-      ["@protobufjs/utf8", [
-        ["npm:1.1.0", {
-          "packageLocation": "./.yarn/cache/@protobufjs-utf8-npm-1.1.0-02c590807c-1.zip/node_modules/@protobufjs/utf8/",
-          "packageDependencies": [
-            ["@protobufjs/utf8", "npm:1.1.0"]
-          ],
-          "linkType": "HARD"
-        }]
-      ]],
       ["@sindresorhus/is", [
         ["npm:0.14.0", {
           "packageLocation": "./.yarn/cache/@sindresorhus-is-npm-0.14.0-9f906ea34b-1.zip/node_modules/@sindresorhus/is/",
@@ -527,24 +432,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"
         }]
       ]],
-      ["@types/lodash", [
-        ["npm:4.14.149", {
-          "packageLocation": "./.yarn/cache/@types-lodash-npm-4.14.149-d92d0adff6-1.zip/node_modules/@types/lodash/",
-          "packageDependencies": [
-            ["@types/lodash", "npm:4.14.149"]
-          ],
-          "linkType": "HARD"
-        }]
-      ]],
-      ["@types/long", [
-        ["npm:4.0.1", {
-          "packageLocation": "./.yarn/cache/@types-long-npm-4.0.1-022c8b6e77-1.zip/node_modules/@types/long/",
-          "packageDependencies": [
-            ["@types/long", "npm:4.0.1"]
-          ],
-          "linkType": "HARD"
-        }]
-      ]],
       ["@types/minimatch", [
         ["npm:3.0.3", {
           "packageLocation": "./.yarn/cache/@types-minimatch-npm-3.0.3-c8b0625f84-1.zip/node_modules/@types/minimatch/",
@@ -555,13 +442,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
         }]
       ]],
       ["@types/node", [
-        ["npm:10.17.17", {
-          "packageLocation": "./.yarn/cache/@types-node-npm-10.17.17-34f7f5cd24-1.zip/node_modules/@types/node/",
-          "packageDependencies": [
-            ["@types/node", "npm:10.17.17"]
-          ],
-          "linkType": "HARD"
-        }],
         ["npm:13.7.7", {
           "packageLocation": "./.yarn/cache/@types-node-npm-13.7.7-c8720ca4bc-1.zip/node_modules/@types/node/",
           "packageDependencies": [
@@ -3673,15 +3553,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"
         }]
       ]],
-      ["long", [
-        ["npm:4.0.0", {
-          "packageLocation": "./.yarn/cache/long-npm-4.0.0-ecd96a31ed-1.zip/node_modules/long/",
-          "packageDependencies": [
-            ["long", "npm:4.0.0"]
-          ],
-          "linkType": "HARD"
-        }]
-      ]],
       ["lowercase-keys", [
         ["npm:1.0.1", {
           "packageLocation": "./.yarn/cache/lowercase-keys-npm-1.0.1-0979e653b8-1.zip/node_modules/lowercase-keys/",
@@ -4535,28 +4406,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"
         }]
       ]],
-      ["protobufjs", [
-        ["npm:6.8.9", {
-          "packageLocation": "./.yarn/unplugged/protobufjs-npm-6.8.9-17a25570b7/node_modules/protobufjs/",
-          "packageDependencies": [
-            ["protobufjs", "npm:6.8.9"],
-            ["@protobufjs/aspromise", "npm:1.1.2"],
-            ["@protobufjs/base64", "npm:1.1.2"],
-            ["@protobufjs/codegen", "npm:2.0.4"],
-            ["@protobufjs/eventemitter", "npm:1.1.0"],
-            ["@protobufjs/fetch", "npm:1.1.0"],
-            ["@protobufjs/float", "npm:1.0.2"],
-            ["@protobufjs/inquire", "npm:1.1.0"],
-            ["@protobufjs/path", "npm:1.1.2"],
-            ["@protobufjs/pool", "npm:1.1.0"],
-            ["@protobufjs/utf8", "npm:1.1.0"],
-            ["@types/long", "npm:4.0.1"],
-            ["@types/node", "npm:10.17.17"],
-            ["long", "npm:4.0.0"]
-          ],
-          "linkType": "HARD"
-        }]
-      ]],
       ["psl", [
         ["npm:1.7.0", {
           "packageLocation": "./.yarn/cache/psl-npm-1.7.0-44bf515f4d-1.zip/node_modules/psl/",
@@ -4685,7 +4534,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["recipe-acceptor", "workspace:."],
             ["@types/async", "npm:3.0.8"],
             ["@types/js-yaml", "npm:3.12.2"],
-            ["@types/lodash", "npm:4.14.149"],
             ["@types/node", "npm:13.9.1"],
             ["@typescript-eslint/eslint-plugin", "virtual:472a02c768ce7382d0c098f2a6965290d526a5adc034566d89078c7df2e634ef246b6bf0267238e0a8234ebdab3389553d0186f412d34e6879a9f1d288f81518#npm:2.23.0"],
             ["@typescript-eslint/parser", "virtual:472a02c768ce7382d0c098f2a6965290d526a5adc034566d89078c7df2e634ef246b6bf0267238e0a8234ebdab3389553d0186f412d34e6879a9f1d288f81518#npm:2.23.0"],
@@ -4700,9 +4548,7 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["eslint-plugin-promise", "npm:4.2.1"],
             ["eslint-plugin-standard", "virtual:472a02c768ce7382d0c098f2a6965290d526a5adc034566d89078c7df2e634ef246b6bf0267238e0a8234ebdab3389553d0186f412d34e6879a9f1d288f81518#npm:4.0.1"],
             ["js-yaml", "npm:3.13.1"],
-            ["lodash", "npm:4.17.15"],
             ["nyc", "npm:15.0.0"],
-            ["protobufjs", "npm:6.8.9"],
             ["ts-node", "virtual:472a02c768ce7382d0c098f2a6965290d526a5adc034566d89078c7df2e634ef246b6bf0267238e0a8234ebdab3389553d0186f412d34e6879a9f1d288f81518#npm:8.7.0"],
             ["typescript", "patch:typescript@npm%3A3.8.3#builtin<compat/typescript>::version=3.8.3&hash=226bd1"]
           ],
