@@ -2,7 +2,7 @@ import async from 'async'
 import { Node, Broker } from './node'
 import { WriteInstruction } from './write-instruction'
 
-type ReplacementFunction = (node: Node, fixtures?: any) => Promise<Array<WriteInstruction>>
+type ReplacementFunction = (node: Node, fixtures: any) => Promise<Array<WriteInstruction>>
 
 export class TransformResult {
   nodeID: number
@@ -27,22 +27,22 @@ export class Transform {
     this.replace = replace
   }
 
-  async resolve(root: Node): Promise<Array<TransformResult>> {
+  async resolve(root: Node, fixtures: any): Promise<Array<TransformResult>> {
     const replaced = await root.select(this.selector)
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     return async.map(replaced, async node => {
-      return new TransformResult(node.nodeID, this.mode, await this.replace(node))
+      return new TransformResult(node.nodeID, this.mode, await this.replace(node, fixtures))
     })
   }
 }
 
-export const resolveTransforms = async(transforms: Array<Transform>, broker: Broker): Promise<void> => {
+export const resolveTransforms = async(transforms: Array<Transform>, broker: Broker, fixtures: any): Promise<void> => {
   try {
     const root = await broker.getRoot()
     await broker.reportCount(transforms.length)
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     await async.each(transforms, async transform => {
-      await broker.reportResults(await transform.resolve(root))
+      await broker.reportResults(await transform.resolve(root, fixtures))
     })
   } catch (err) {
     console.log(err)

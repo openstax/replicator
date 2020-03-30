@@ -49,7 +49,6 @@ impl fmt::Display for OvenError {
   }
 }
 
-
 pub type RequestResult<T> = Result<T, RequestError>;
 
 #[derive(Debug)]

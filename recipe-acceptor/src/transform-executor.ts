@@ -1,17 +1,35 @@
 import { UnixSocketBroker } from './node'
 import { resolveTransforms } from './execution'
 
-async function helper(socketPath: string, modulePath: string, which: [number, number]): Promise<void> {
-  const broker = new UnixSocketBroker(socketPath)
-  const moduleExports = await import(modulePath)
-  const transformsToRun = moduleExports.transforms.filter((_: any, index: number) => {
-    return index % which[0] === which[1]
-  })
-  await resolveTransforms(transformsToRun, broker)
+async function helper(args: RunArgs): Promise<void> {
+  const broker = new UnixSocketBroker(args.socketPath)
+  const transformsToRun = (args.transformsPath == null)
+    ? []
+    : (await import(args.transformsPath))
+      ?.transforms
+      ?.filter((_: any, index: number) => {
+        return index % args.numWorkers === args.workerID
+      }) || []
+  const fixtures = (args.fixturesPath == null)
+    ? {}
+    : (await import(args.fixturesPath))
+      ?.fixtures(broker) || {}
+  if (transformsToRun.length === 0) {
+    console.error(`Warning (workerID ${args.workerID}): No transformations were passed to be run`)
+  }
+  await resolveTransforms(transformsToRun, broker, fixtures)
 }
 
-export function run(socketPath: string, modulePath: string, which: [number, number], callback: any): void {
-  helper(socketPath, modulePath, which)
+interface RunArgs {
+  socketPath: string
+  transformsPath?: string
+  numWorkers: number
+  workerID: number
+  fixturesPath?: string
+}
+
+export function run(args: RunArgs, callback: any): void {
+  helper(args)
     .then(_ => {
       callback(null, undefined)
     })

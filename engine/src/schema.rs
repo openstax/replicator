@@ -39,29 +39,29 @@ pub(crate) enum WriteInstruction {
   #[serde(rename = "S")]
   StartElement {
     #[serde(rename = "q")]
-    qualified_name: QualifiedName
+    qualified_name: QualifiedName,
   },
   #[serde(rename = "E")]
   EndElement {
     #[serde(rename = "q")]
-    qualified_name: QualifiedName
+    qualified_name: QualifiedName,
   },
   #[serde(rename = "T")]
   Text {
     #[serde(rename = "t")]
-    text: String
+    text: String,
   },
   #[serde(rename = "A")]
   Attributes {
     #[serde(rename = "a")]
-    attributes: Vec<Attribute>
+    attributes: Vec<Attribute>,
   },
   #[serde(rename = "R")]
   Replace {
     #[serde(rename = "n")]
     node_id: usize,
     #[serde(rename = "m")]
-    mode: String
+    mode: String,
   },
 }
 
@@ -72,34 +72,34 @@ pub(crate) enum Request {
     #[serde(rename = "n")]
     node_id: usize,
     #[serde(rename = "s")]
-    selector: String
+    selector: String,
   },
   #[serde(rename = "T")]
   Text {
     #[serde(rename = "n")]
-    node_id: usize
+    node_id: usize,
   },
   #[serde(rename = "A")]
   Attributes {
     #[serde(rename = "n")]
-    node_id: usize
+    node_id: usize,
   },
   #[serde(rename = "R")]
   PutResults {
     #[serde(rename = "r")]
-    results: Vec<TransformResult>
+    results: Vec<TransformResult>,
   },
   #[serde(rename = "C")]
   PutCount {
     #[serde(rename = "c")]
-    count: usize
+    count: usize,
   },
   #[serde(rename = "CC")]
   PutComplete,
   #[serde(rename = "E")]
   PutError {
     #[serde(rename = "m")]
-    message: String
+    message: String,
   },
   #[serde(rename = "H")]
   HeartBeat,
@@ -110,16 +110,16 @@ pub(crate) enum Response {
   #[serde(rename = "S")]
   Selection {
     #[serde(rename = "e")]
-    elements: Vec<Element>
+    elements: Vec<Element>,
   },
   #[serde(rename = "T")]
   Text {
     #[serde(rename = "t")]
-    text: String
+    text: String,
   },
   #[serde(rename = "A")]
   Attributes {
     #[serde(rename = "a")]
-    attributes: Vec<Attribute>
+    attributes: Vec<Attribute>,
   },
 }

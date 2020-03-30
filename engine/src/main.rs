@@ -1,18 +1,18 @@
+mod error;
 mod schema;
 mod select;
-mod error;
 
 // networking and io imports
 use std::fs;
 use std::io::{Read, Write};
-use std::path::Path;
 use std::os::unix::net::{UnixListener, UnixStream};
+use std::path::Path;
 
 // selection and tree parsing imports
 #[macro_use]
 extern crate rental;
-use std::ops::Deref;
 use roxmltree::{Document, NodeType};
+use std::ops::Deref;
 
 // general
 use std::collections::HashMap;
@@ -21,17 +21,17 @@ use std::process::{Command, Stdio};
 // parallelism/concurrency
 use rayon::scope;
 use std::sync::{Arc, Mutex};
-use std::time::{Instant};
+use std::time::Instant;
 
 // cli
 use clap::{crate_version, App, Arg};
-use console::style;
+use console::{style, Style};
 use indicatif::{ProgressBar, ProgressDrawTarget, ProgressStyle};
 
 // self
+use self::error::{OvenResult, RequestError, RequestResult};
 use self::schema::{Attribute, Element, QualifiedName, Request, Response, WriteInstruction};
 use self::select::{resolve_selector, ActionableSelector};
-use self::error::{OvenResult, RequestResult, RequestError};
 
 rental! {
   pub mod rent_document {
@@ -161,9 +161,16 @@ fn handle_request(
     Request::PutResults { results } => {
       let mut locked_manager = state_manager.lock().unwrap();
       let state_results = &mut locked_manager.results;
+      let mut races = 0;
       for result in results {
-        state_results.insert((result.node_id, result.mode), result.instructions);
+        if state_results
+          .insert((result.node_id, result.mode), result.instructions)
+          .is_some()
+        {
+          races += 1;
+        }
       }
+      locked_manager.race_count += races;
       locked_manager.progress += 1;
       return Ok(());
     }
@@ -186,7 +193,7 @@ fn handle_request(
   let response_string = serde_json::to_string(&response)?;
   let bytes = response_string.as_bytes();
   stream.write_all(bytes)?;
-  
+
   Ok(())
 }
 
@@ -196,6 +203,7 @@ struct StateManager {
   progress: usize,
   completed: bool,
   error: Option<RequestError>,
+  race_count: usize,
 }
 
 fn main() {
@@ -229,16 +237,15 @@ fn main() {
     fs::canonicalize(matches.value_of("MANIFEST").expect("Argument is required")).unwrap();
 
   println!(
-    "{} Starting acceptor process for manifest: {}",
+    "{} Starting acceptor for manifest: {}",
     style(format!("[1/{}]", NUM_STEPS)).bold().dim(),
     style(manifest_file_path.to_string_lossy()).dim()
   );
   let mut child_process = Command::new("node")
     .args(&[
-      // "--prof",
       "-r",
       "./../recipe-acceptor/.pnp.js",
-      "./../recipe-acceptor/build/src/run.js",
+      "./../recipe-acceptor/build/src/bake.js",
       SOCKET_PATH,
       manifest_file_path.to_str().unwrap(),
     ])
@@ -260,6 +267,7 @@ fn main() {
     progress: 0,
     completed: false,
     error: None,
+    race_count: 0,
   }));
 
   let progress_bar = ProgressBar::hidden();
@@ -306,20 +314,45 @@ fn main() {
       }
     }
   });
+  println!("{}", style("### Report ###").bold());
+  let not_good_style = Style::new().red().bold();
+  let good_style = Style::new().green().bold();
+  let locked_manager = state_manager.lock().unwrap();
+  println!("Results: {:?}", locked_manager.results.iter().count());
+  println!(
+    "Races: {:?}",
+    if locked_manager.race_count > 0 {
+      &not_good_style
+    } else {
+      &good_style
+    }
+    .apply_to(locked_manager.race_count)
+  );
+  println!(
+    "Error: {:?}",
+    if locked_manager.error.is_some() {
+      &not_good_style
+    } else {
+      &good_style
+    }
+    .apply_to(&locked_manager.error)
+  );
+
+  println!(
+    "{} Shutting down acceptor...",
+    style(format!("[4/{}]", NUM_STEPS)).bold().dim(),
+  );
+  child_process.kill().ok();
 
   println!(
     "{} Serializing...",
-    style(format!("[4/{}]", NUM_STEPS)).bold().dim(),
+    style(format!("[5/{}]", NUM_STEPS)).bold().dim(),
   );
 
-  child_process.kill().ok();
-
-  let locked_manager = state_manager.lock().unwrap();
-  println!("Results: {:?}", locked_manager.results.iter().count());
-  println!("Error: {:?}", locked_manager.error);
-
+  
   // TODO: serialize output
-  // TODO: Clean up error handling on OvenError with From impls
+  // TODO: Intersection types to handle race conditions
+  // TODO: Clean up error handling in main on OvenError with From impls
   // TODO: Pipe child process output to logfile or report afterwards?
 }
 

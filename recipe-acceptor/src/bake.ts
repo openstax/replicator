@@ -1,12 +1,11 @@
 import fs from 'fs'
 import path from 'path'
 import yaml from 'js-yaml'
-import async from 'async'
 import { UnixSocketBroker } from './node'
 import workerFarm from 'worker-farm'
 import lodash from 'lodash'
 
-export const runCommand = async(socketPath: string, manifestPath: string): Promise<void> => {
+const runCommand = async(socketPath: string, manifestPath: string): Promise<void> => {
   const socketPathAbsolute = path.resolve(socketPath)
   const manifestPathAbsolute = path.resolve(manifestPath)
 
@@ -22,11 +21,24 @@ export const runCommand = async(socketPath: string, manifestPath: string): Promi
     const manifestString = fs.readFileSync(manifestPathAbsolute, { encoding: 'utf8' })
     const manifest = yaml.safeLoad(manifestString)
 
-    const spawnWorkers: (modulePath: string) => Promise<void> = async modulePath => {
+    const fixturesPath = manifest.fixtures == null
+      ? undefined
+      : path.resolve(manifestDir, manifest.fixtures)
+    const transformsPath = manifest.transforms == null
+      ? undefined
+      : path.resolve(manifestDir, manifest.transforms)
+
+    const spawnWorkers = async(transformsModulePath?: string, fixturesModulePath?: string): Promise<void> => {
       return new Promise((resolve, reject) => {
         let completed = 0
         for (const workerID of lodash.range(numWorkers)) {
-          workers.run(socketPathAbsolute, modulePath, [numWorkers, workerID], (err: Error | null, _: undefined) => {
+          workers.run({
+            socketPath: socketPathAbsolute,
+            transformsPath: transformsModulePath,
+            fixturesPath: fixturesModulePath,
+            numWorkers,
+            workerID
+          }, (err: Error | null, _: undefined) => {
             if (err == null) {
               if (++completed === numWorkers) {
                 resolve(undefined)
@@ -39,11 +51,7 @@ export const runCommand = async(socketPath: string, manifestPath: string): Promi
       })
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-misused-promises
-    await async.each(manifest.modules, async(modulePathRelative: string) => {
-      const modulePath = path.resolve(manifestDir, modulePathRelative)
-      await spawnWorkers(modulePath)
-    })
+    await spawnWorkers(transformsPath, fixturesPath)
 
     await broker.reportComplete()
   } catch (err) {
@@ -56,3 +64,7 @@ export const runCommand = async(socketPath: string, manifestPath: string): Promi
     workerFarm.end(workers)
   }
 }
+
+const socketPath = process.argv[2]
+const manifestPath = process.argv[3]
+runCommand(socketPath, manifestPath).catch(err => console.log(err))

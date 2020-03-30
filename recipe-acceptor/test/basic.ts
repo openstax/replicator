@@ -124,7 +124,7 @@ test('transforms_run_in_parallel', async t => {
     await sleep(1000)
     return queueWriteInstruction('div-three-transformed')
   })
-  await resolveTransforms([tranformFirst, tranformSecond, tranformThird], mockBroker)
+  await resolveTransforms([tranformFirst, tranformSecond, tranformThird], mockBroker, {})
   await mockBroker.reportComplete()
 
   t.true(mockBroker.completed)
@@ -149,7 +149,7 @@ test('error_repored_when_occurs', async t => {
   const tranformFirst = new Transform('//div-one', 'default', () => {
     throw new Error('an error')
   })
-  await resolveTransforms([tranformFirst], mockBroker)
+  await resolveTransforms([tranformFirst], mockBroker, {})
 
   t.false(mockBroker.completed)
   t.truthy(mockBroker.error)
