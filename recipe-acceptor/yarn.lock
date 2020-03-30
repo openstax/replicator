@@ -202,6 +202,32 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@rollup/plugin-commonjs@npm:^11.0.2":
+  version: 11.0.2
+  resolution: "@rollup/plugin-commonjs@npm:11.0.2"
+  dependencies:
+    "@rollup/pluginutils": ^3.0.0
+    estree-walker: ^1.0.1
+    is-reference: ^1.1.2
+    magic-string: ^0.25.2
+    resolve: ^1.11.0
+  peerDependencies:
+    rollup: ^1.20.0
+  checksum: f5291fb135b4444892d9c4026d86fb084c7a7f23a85b84c1a017ad79f9ea255f1746234b254f023aee097b7fb4e4cc59de2cd910c30dce77b3dd8b4fbe2b6507
+  languageName: node
+  linkType: hard
+
+"@rollup/pluginutils@npm:^3.0.0":
+  version: 3.0.8
+  resolution: "@rollup/pluginutils@npm:3.0.8"
+  dependencies:
+    estree-walker: ^1.0.1
+  peerDependencies:
+    rollup: ^1.20.0
+  checksum: e2324cfea06e1eaa6aa962b267f9f0ae0d11b5820cc7a11b856174a607964a79efe779a81c267ed80d864848e74a71b9459a23d8776e11dd7eb5e52d23672fa4
+  languageName: node
+  linkType: hard
+
 "@sindresorhus/is@npm:^0.14.0":
   version: 0.14.0
   resolution: "@sindresorhus/is@npm:0.14.0"
@@ -246,6 +272,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/estree@npm:0.0.39":
+  version: 0.0.39
+  resolution: "@types/estree@npm:0.0.39"
+  checksum: 1a749743201e48d2ccb2ebf03f7a01102254c0a8aa4b20f7d9919a375fcd6368d54317162a4477598edb64dfab3ed675acdb0513ff038a4930e5a528ca9746fe
+  languageName: node
+  linkType: hard
+
 "@types/events@npm:*":
   version: 3.0.0
   resolution: "@types/events@npm:3.0.0"
@@ -275,6 +308,13 @@ __metadata:
   version: 7.0.4
   resolution: "@types/json-schema@npm:7.0.4"
   checksum: f45ed2e1dad68a7bcb58c7aa38a9c15df786af044264d73b9a87c0dd2d36c33179d74bf08759fba53611b90de5a088874ecf85a4a02631fbabfc29bb0a2a73ac
+  languageName: node
+  linkType: hard
+
+"@types/lodash@npm:^4.14.149":
+  version: 4.14.149
+  resolution: "@types/lodash@npm:4.14.149"
+  checksum: 2f1863a239a1e99dade160067050baf23d6796c4c494e37d52e4a59404f109bcb1fe165ee6a83b32b354c9f9b219538385075bc577ed61e8ec799889fd06e820
   languageName: node
   linkType: hard
 
@@ -1097,6 +1137,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"commander@npm:^2.20.0":
+  version: 2.20.3
+  resolution: "commander@npm:2.20.3"
+  checksum: eae98d97c0a3a59096be01418e7d882978bbc0c9b8921db75e9907a738dd764ecca833950a883fa1a81d9149e7492bc65af0adaef17f5b112558c176089062bd
+  languageName: node
+  linkType: hard
+
 "comment-json@npm:^2.2.0":
   version: 2.4.2
   resolution: "comment-json@npm:2.4.2"
@@ -1475,6 +1522,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"errno@npm:~0.1.7":
+  version: 0.1.7
+  resolution: "errno@npm:0.1.7"
+  dependencies:
+    prr: ~1.0.1
+  bin:
+    errno: ./cli.js
+  checksum: 2b25524a85c579fcf633f8cec234508bc8ce09a5c268f861c4ceaecabdbc116ba7d697fbf60f68e3771c0915aafa19e80c33e0ea2c788e9b05e3c30ce02cdae7
+  languageName: node
+  linkType: hard
+
 "error-ex@npm:^1.2.0, error-ex@npm:^1.3.1":
   version: 1.3.2
   resolution: "error-ex@npm:1.3.2"
@@ -1774,6 +1832,13 @@ __metadata:
   version: 4.3.0
   resolution: "estraverse@npm:4.3.0"
   checksum: d70200933f2b01e500cdeb5b58551319123f422f3501c8cdf30c84d0d7c1f39dc9f2307341a9ad2cf2c493d3132d4f2b8676197519d79196d2c2354cfb1cf340
+  languageName: node
+  linkType: hard
+
+"estree-walker@npm:^1.0.1":
+  version: 1.0.1
+  resolution: "estree-walker@npm:1.0.1"
+  checksum: ac50c28d2dfb376ce92a28d476f2f6147dffe93c9fb1cd9cffbf6f163e63061faa82019b5b6070135b2bb8109ef9a3ece1c8a0d4627a1d26a1c06075129e89e7
   languageName: node
   linkType: hard
 
@@ -2585,6 +2650,15 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
+"is-reference@npm:^1.1.2":
+  version: 1.1.4
+  resolution: "is-reference@npm:1.1.4"
+  dependencies:
+    "@types/estree": 0.0.39
+  checksum: 281637082d8c8acd8bdb97c63d987fbb3290c0bd55152c7c23769357c5e63595d932debdd2ae49154d214cfd53a63d56b6499a224075c3f92a72b1c0758c7dca
+  languageName: node
+  linkType: hard
+
 "is-regex@npm:^1.0.5":
   version: 1.0.5
   resolution: "is-regex@npm:1.0.5"
@@ -2998,6 +3072,15 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
+"magic-string@npm:^0.25.2":
+  version: 0.25.7
+  resolution: "magic-string@npm:0.25.7"
+  dependencies:
+    sourcemap-codec: ^1.4.4
+  checksum: d122386f2b2f70ffc2f0a8178f4f526ebda5cdeb2ba7a600d6d8a0796a18ed19936bc6010e0c01d1c6083d2b04c529bbf1d280c4f2f01a620ac34bcd1b308e37
+  languageName: node
+  linkType: hard
+
 "make-dir@npm:^3.0.0, make-dir@npm:^3.0.2":
   version: 3.0.2
   resolution: "make-dir@npm:3.0.2"
@@ -3052,6 +3135,13 @@ fsevents@~2.1.2:
   version: 1.3.0
   resolution: "merge2@npm:1.3.0"
   checksum: dbcb0fa83b00cab318e82b8c370d13291a7583d2432521959246fc8048549a3d9c4fec3a7f52d17a2c071499b56dcaacceb9f543c08475235cf99d6b9ff9109f
+  languageName: node
+  linkType: hard
+
+"microjob@npm:^0.7.0":
+  version: 0.7.0
+  resolution: "microjob@npm:0.7.0"
+  checksum: 7fd5dc6f7a581b1f0a8700e25f6b5e6c218ae4a3a1ad67a60e63c6cc1bd34fdd87c955144a8f2e5b7a7df9f2ebdc14d38e51b32bc4e91a7da867481cfb554b37
   languageName: node
   linkType: hard
 
@@ -3747,6 +3837,13 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
+"prr@npm:~1.0.1":
+  version: 1.0.1
+  resolution: "prr@npm:1.0.1"
+  checksum: c18910ce7c69340758196f48258ed429807a3620de383e2ada617a4e6d5448d59a9dc77510b0eb13bbe63ecf879afbc798abbfcbff36e65c317be0a328a1194f
+  languageName: node
+  linkType: hard
+
 "psl@npm:^1.1.28":
   version: 1.7.0
   resolution: "psl@npm:1.7.0"
@@ -3862,8 +3959,10 @@ fsevents@~2.1.2:
   version: 0.0.0-use.local
   resolution: "recipe-acceptor@workspace:."
   dependencies:
+    "@rollup/plugin-commonjs": ^11.0.2
     "@types/async": ^3.0.8
     "@types/js-yaml": ^3.12.2
+    "@types/lodash": ^4.14.149
     "@types/node": ^13.9.1
     "@typescript-eslint/eslint-plugin": 2
     "@typescript-eslint/parser": ^2.23.0
@@ -3878,9 +3977,14 @@ fsevents@~2.1.2:
     eslint-plugin-promise: 4
     eslint-plugin-standard: 4
     js-yaml: ^3.13.1
+    lodash: ^4.17.15
+    microjob: ^0.7.0
     nyc: ^15.0.0
+    rollup: ^2.2.0
+    terser: ^4.6.7
     ts-node: ^8.6.2
     typescript: ^3.8.3
+    worker-farm: ^1.7.0
   languageName: unknown
   linkType: soft
 
@@ -3997,7 +4101,7 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
-"resolve@^1.10.0, resolve@^1.10.1, resolve@^1.12.0, resolve@^1.13.1, resolve@^1.3.2":
+"resolve@^1.10.0, resolve@^1.10.1, resolve@^1.11.0, resolve@^1.12.0, resolve@^1.13.1, resolve@^1.3.2":
   version: 1.15.1
   resolution: "resolve@npm:1.15.1"
   dependencies:
@@ -4006,7 +4110,7 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
-"resolve@patch:resolve@^1.10.0#builtin<compat/resolve>, resolve@patch:resolve@^1.10.1#builtin<compat/resolve>, resolve@patch:resolve@^1.12.0#builtin<compat/resolve>, resolve@patch:resolve@^1.13.1#builtin<compat/resolve>, resolve@patch:resolve@^1.3.2#builtin<compat/resolve>":
+"resolve@patch:resolve@^1.10.0#builtin<compat/resolve>, resolve@patch:resolve@^1.10.1#builtin<compat/resolve>, resolve@patch:resolve@^1.11.0#builtin<compat/resolve>, resolve@patch:resolve@^1.12.0#builtin<compat/resolve>, resolve@patch:resolve@^1.13.1#builtin<compat/resolve>, resolve@patch:resolve@^1.3.2#builtin<compat/resolve>":
   version: 1.15.1
   resolution: "resolve@patch:resolve@npm%3A1.15.1#builtin<compat/resolve>::version=1.15.1&hash=8fccd0"
   dependencies:
@@ -4071,6 +4175,20 @@ fsevents@~2.1.2:
   bin:
     rimraf: bin.js
   checksum: aa08a21124f5d53fbf7ad5c8db88becfa190079fab0fc3ac5639f3b28365d0ad449a54eab2dd423858a65831f7c8385ab81a3f7ffbc05be81952ce59e62c1f73
+  languageName: node
+  linkType: hard
+
+"rollup@npm:^2.2.0":
+  version: 2.2.0
+  resolution: "rollup@npm:2.2.0"
+  dependencies:
+    fsevents: ~2.1.2
+  dependenciesMeta:
+    fsevents:
+      optional: true
+  bin:
+    rollup: dist/bin/rollup
+  checksum: b874713925e8d9e082dad63dcdb2201958edc5240aef63c48823f92279388f074b78a82f06a0327f01629d1aaa76774ac390b33e6a8c70eaac69445eca92bd41
   languageName: node
   linkType: hard
 
@@ -4222,7 +4340,7 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
-"source-map-support@npm:^0.5.16, source-map-support@npm:^0.5.6":
+"source-map-support@npm:^0.5.16, source-map-support@npm:^0.5.6, source-map-support@npm:~0.5.12":
   version: 0.5.16
   resolution: "source-map-support@npm:0.5.16"
   dependencies:
@@ -4239,10 +4357,17 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
-"source-map@npm:^0.6.0, source-map@npm:^0.6.1":
+"source-map@npm:^0.6.0, source-map@npm:^0.6.1, source-map@npm:~0.6.1":
   version: 0.6.1
   resolution: "source-map@npm:0.6.1"
   checksum: fa17f30e37dfa8d8065fc98e8c51ae80d7050055f90dbd40e8644269bda04707386180c4c43af7104a29af56109663e994ccbc2cf766af01e915285c7f93cc40
+  languageName: node
+  linkType: hard
+
+"sourcemap-codec@npm:^1.4.4":
+  version: 1.4.8
+  resolution: "sourcemap-codec@npm:1.4.8"
+  checksum: 9d8496539603ad2528c7ed1cfd956e6f21b16c1ccf493d9ca96444d47cf6c295701827d80503f32a4c8291cac035d608f9a28275c58f51fe615fc41cc688f107
   languageName: node
   linkType: hard
 
@@ -4536,6 +4661,19 @@ fsevents@~2.1.2:
   version: 2.2.0
   resolution: "term-size@npm:2.2.0"
   checksum: be3541af7bcce31e460562cd4b722e45d700864bb84fd18898e2ddd3e606156faf42fdd4fe2b842b3684e79db119a00d4ea08c567d6a86ed83defa554833dce3
+  languageName: node
+  linkType: hard
+
+"terser@npm:^4.6.7":
+  version: 4.6.7
+  resolution: "terser@npm:4.6.7"
+  dependencies:
+    commander: ^2.20.0
+    source-map: ~0.6.1
+    source-map-support: ~0.5.12
+  bin:
+    terser: bin/terser
+  checksum: 62cd446ec3bcd335186fa0207f5e0fd3641a8bd1d5dd4257bedeb2b869d592bb888636f0b4d0fb2cda64355fa0e682d1c08c07ce5edbae0710a3977c376511f1
   languageName: node
   linkType: hard
 
@@ -4899,6 +5037,15 @@ typescript@^3.8.3:
   version: 1.2.3
   resolution: "word-wrap@npm:1.2.3"
   checksum: b08926e28f389a1ed8f2d2c76e0ea7eb5b4d7dc85871fd79509a198ee95307318ff7940143a9d423a001b68d0be49230d14f91dc0322f1954b808d23f4c3a7bf
+  languageName: node
+  linkType: hard
+
+"worker-farm@npm:^1.7.0":
+  version: 1.7.0
+  resolution: "worker-farm@npm:1.7.0"
+  dependencies:
+    errno: ~0.1.7
+  checksum: 8df71db53dacb4fd9d31a6dd92c4364c3a75427e8c880e0e3715392431ef6b8c427c20db81526e2bd9b23ca6a007c90b28a8eebafa514f8ff2addd13f73e0237
   languageName: node
   linkType: hard
 

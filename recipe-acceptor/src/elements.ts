@@ -16,12 +16,12 @@ export const Copy: ComponentFunction = async({ attributes, children }) => {
   const nodeName = item.name()
   const nodeAttributes = (await item.attributes())
     .reduce((acc, attr) => {
-      const name = attr.qName.toNameString()
+      const name = attr.qName.toExpandedName()
       const value = attr.value
       return { ...acc, [name]: value }
     }, {})
   const content = children != null ? children : []
-  return queueWriteInstruction(nodeName.toNameString(), nodeAttributes, ...content)
+  return queueWriteInstruction(nodeName.toExpandedName(), nodeAttributes, ...content)
 }
 
 export const Replace: ComponentFunction = async({ attributes, children }) => {

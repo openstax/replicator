@@ -1,7 +1,7 @@
 import { QualifiedName, Attribute, Node } from './node'
 
 export interface WriteInstruction {
-  toRequest(): string
+  toRequestObj(): any
 }
 
 export class StartElement implements WriteInstruction {
@@ -10,10 +10,8 @@ export class StartElement implements WriteInstruction {
     this.name = name
   }
 
-  toRequest(): string {
-    return JSON.stringify({
-      StartElementInstruction: { qualified_name: this.name.toRequest() }
-    })
+  toRequestObj(): any {
+    return { S: { q: this.name.toRequestObj() } }
   }
 }
 
@@ -23,10 +21,8 @@ export class EndElement implements WriteInstruction {
     this.name = name
   }
 
-  toRequest(): string {
-    return JSON.stringify({
-      EndElementInstruction: { qualified_name: this.name.toRequest() }
-    })
+  toRequestObj(): any {
+    return { E: { q: this.name.toRequestObj() } }
   }
 }
 
@@ -36,10 +32,8 @@ export class Text implements WriteInstruction {
     this.text = text
   }
 
-  toRequest(): string {
-    return JSON.stringify({
-      TextInstruction: { text: this.text }
-    })
+  toRequestObj(): any {
+    return { T: { t: this.text } }
   }
 }
 
@@ -49,10 +43,8 @@ export class Attributes implements WriteInstruction {
     this.attributes = attributes
   }
 
-  toRequest(): string {
-    return JSON.stringify({
-      AttributeInstruction: { attributes: this.attributes }
-    })
+  toRequestObj(): any {
+    return { A: { a: this.attributes } }
   }
 }
 
@@ -64,10 +56,8 @@ export class Replace implements WriteInstruction {
     this.mode = mode
   }
 
-  toRequest(): string {
-    return JSON.stringify({
-      ReplaceInstruction: { node_id: this.node.nodeID, mode: this.mode }
-    })
+  toRequestObj(): any {
+    return { T: { n: this.node.nodeID, m: this.mode } }
   }
 }
 

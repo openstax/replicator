@@ -1,7 +1,7 @@
 import test from 'ava'
 
 import { queueWriteInstruction } from './../src/elements'
-import { Transform, TransformResult, resolveTransforms } from './../src/bake'
+import { Transform, TransformResult, resolveTransforms } from './../src/execution'
 import { Broker, Node, Attribute, QualifiedName } from './../src/node'
 
 const sleep = async(ms: number): Promise<void> => {

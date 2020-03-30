@@ -1,6 +1,6 @@
 import { Socket } from 'net'
 import path from 'path'
-import { TransformResult } from './bake'
+import { TransformResult } from './execution'
 
 export class QualifiedName {
   localName: string
@@ -17,14 +17,12 @@ export class QualifiedName {
     return new QualifiedName(name.slice(endOfUri + 1), endOfUri === -1 ? '' : name.slice(1, endOfUri))
   }
 
-  toNameString(): string {
+  toExpandedName(): string {
     return `{${this.uri}}${this.localName}`
   }
 
-  toRequest(): string {
-    return JSON.stringify(
-      { uri: this.uri, local_name: this.localName }
-    )
+  toRequestObj(): any {
+    return { u: this.uri, l: this.localName }
   }
 
   equals(other: QualifiedName): boolean {
@@ -41,36 +39,34 @@ export class Attribute {
     this.value = value
   }
 
-  toRequest(): string {
-    return JSON.stringify(
-      { qualified_name: this.qName.toRequest(), value: this.value }
-    )
+  toRequestObj(): any {
+    return { q: this.qName.toRequestObj(), v: this.value }
   }
 }
 
 const selectionRequest = (nodeID: number, selector: string): string => {
   return JSON.stringify({
-    Selection: { node_id: nodeID, selector: selector }
+    S: { n: nodeID, s: selector }
   })
 }
 const textRequest = (nodeID: number): string => {
   return JSON.stringify({
-    Text: { node_id: nodeID }
+    T: { n: nodeID }
   })
 }
 const attributeRequest = (nodeID: number): string => {
   return JSON.stringify({
-    Attributes: { node_id: nodeID }
+    A: { n: nodeID }
   })
 }
 const reportResultRequest = (results: Array<TransformResult>): string => {
   return JSON.stringify({
-    PutResults: {
-      results: results.map(transformResult => {
+    R: {
+      r: results.map(transformResult => {
         return {
-          node_id: transformResult.nodeID,
-          mode: transformResult.mode,
-          instructions: transformResult.instructions.map(instruction => instruction.toRequest())
+          n: transformResult.nodeID,
+          m: transformResult.mode,
+          i: transformResult.instructions.map(instruction => instruction.toRequestObj())
         }
       })
     }
@@ -78,45 +74,47 @@ const reportResultRequest = (results: Array<TransformResult>): string => {
 }
 const reportCountRequest = (count: number): string => {
   return JSON.stringify({
-    PutCount: { count }
+    C: { c: count }
   })
 }
 const reportComplete = (): string => {
   return JSON.stringify({
-    PutComplete: null
+    CC: null
   })
 }
 const reportErrorRequest = (error: Error): string => {
   return JSON.stringify({
-    PutError: { message: error.toString() }
+    E: { m: error.toString() }
   })
 }
 
 export class UnixSocketBroker implements Broker {
   socketFile: string
+  count: number
 
   constructor(socketFile: string) {
     this.socketFile = path.resolve(socketFile)
+    this.count = 0
   }
 
   async select(nodeID: number, selector: string): Promise<Array<Node>> {
     const response = await this.socketConnection(selectionRequest(nodeID, selector))
-    return response.Selection.elements.map((element: any) => {
-      const qName = element.qualified_name
-      return new Node(element.node_id, new QualifiedName(qName.local_name, qName.uri), this)
+    return response.S.e.map((element: any) => {
+      const qName = element.q
+      return new Node(element.n, new QualifiedName(qName.l, qName.u), this)
     })
   }
 
   async getText(nodeID: number): Promise<string> {
     const response = await this.socketConnection(textRequest(nodeID))
-    return response.Text.text
+    return response.T.t
   }
 
   async getAttributes(nodeID: number): Promise<Array<Attribute>> {
     const response = await this.socketConnection(attributeRequest(nodeID))
-    return response.Attributes.attributes.map((attribute: any) => {
-      const qName = attribute.qualified_name
-      return new Attribute(new QualifiedName(qName.local_name, qName.uri), attribute.value)
+    return response.A.a.map((attribute: any) => {
+      const qName = attribute.q
+      return new Attribute(new QualifiedName(qName.l, qName.u), attribute.v)
     })
   }
 
@@ -142,21 +140,54 @@ export class UnixSocketBroker implements Broker {
 
   async socketConnectionOneWay(payload: string): Promise<void> {
     return new Promise((resolve, reject) => {
+      // console.log(Buffer.byteLength(payload, 'utf8'))
       const connection: Socket = new Socket()
-        .connect(this.socketFile, () => {
-          connection.end(payload)
+        .on('connect', () => {
+          connection.end(payload + '\n')
+        })
+        .on('end', () => {
           resolve(undefined)
         })
+        .on('error', (err: any) => {
+          if (err.code === 'EAGAIN') {
+            connection.connect(this.socketFile)
+            return
+          }
+          connection.destroy()
+          reject(err)
+        })
+        .connect(this.socketFile)
     })
   }
 
   async socketConnection(payload: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      const connection = new Socket().connect(this.socketFile, () => {
-        connection.end(payload)
-      }).on('data', data => {
-        resolve(JSON.parse(data.toString()))
-      })
+      // let start: [number, number] | null = null
+      const buffers: Array<Buffer> = []
+      const connection = new Socket()
+        .on('connect', () => {
+          connection.end(payload + '\n')
+        })
+        .on('data', data => {
+          // if (start === null) {
+          //   start = process.hrtime()
+          // }
+          buffers.push(data)
+        })
+        .on('end', () => {
+          // let end = process.hrtime()
+          // console.info('Execution time (hr): %ds %dms', end[0], end[1] / 1000000)
+          const response = Buffer.concat(buffers).toString()
+          resolve(JSON.parse(response))
+        })
+        .on('error', (err: any) => {
+          if (err.code === 'EAGAIN') {
+            connection.connect(this.socketFile)
+            return
+          }
+          reject(err)
+        })
+        .connect(this.socketFile)
     })
   }
 }
