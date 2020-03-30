@@ -125,6 +125,7 @@ test('transforms_run_in_parallel', async t => {
     return queueWriteInstruction('div-three-transformed')
   })
   await resolveTransforms([tranformFirst, tranformSecond, tranformThird], mockBroker)
+  await mockBroker.reportComplete()
 
   t.true(mockBroker.completed)
   t.falsy(mockBroker.error, undefined)

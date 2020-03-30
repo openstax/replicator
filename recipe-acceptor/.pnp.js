@@ -120,7 +120,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["eslint-plugin-standard", "virtual:472a02c768ce7382d0c098f2a6965290d526a5adc034566d89078c7df2e634ef246b6bf0267238e0a8234ebdab3389553d0186f412d34e6879a9f1d288f81518#npm:4.0.1"],
             ["js-yaml", "npm:3.13.1"],
             ["lodash", "npm:4.17.15"],
-            ["microjob", "npm:0.7.0"],
             ["nyc", "npm:15.0.0"],
             ["rollup", "npm:2.2.0"],
             ["terser", "npm:4.6.7"],
@@ -3742,15 +3741,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
           "linkType": "HARD"
         }]
       ]],
-      ["microjob", [
-        ["npm:0.7.0", {
-          "packageLocation": "./.yarn/cache/microjob-npm-0.7.0-3124510a09-1.zip/node_modules/microjob/",
-          "packageDependencies": [
-            ["microjob", "npm:0.7.0"]
-          ],
-          "linkType": "HARD"
-        }]
-      ]],
       ["micromatch", [
         ["npm:4.0.2", {
           "packageLocation": "./.yarn/cache/micromatch-npm-4.0.2-f059c00e51-1.zip/node_modules/micromatch/",
@@ -4677,7 +4667,6 @@ function $$SETUP_STATE(hydrateRuntimeState, basePath) {
             ["eslint-plugin-standard", "virtual:472a02c768ce7382d0c098f2a6965290d526a5adc034566d89078c7df2e634ef246b6bf0267238e0a8234ebdab3389553d0186f412d34e6879a9f1d288f81518#npm:4.0.1"],
             ["js-yaml", "npm:3.13.1"],
             ["lodash", "npm:4.17.15"],
-            ["microjob", "npm:0.7.0"],
             ["nyc", "npm:15.0.0"],
             ["rollup", "npm:2.2.0"],
             ["terser", "npm:4.6.7"],

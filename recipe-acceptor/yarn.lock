@@ -3138,13 +3138,6 @@ fsevents@~2.1.2:
   languageName: node
   linkType: hard
 
-"microjob@npm:^0.7.0":
-  version: 0.7.0
-  resolution: "microjob@npm:0.7.0"
-  checksum: 7fd5dc6f7a581b1f0a8700e25f6b5e6c218ae4a3a1ad67a60e63c6cc1bd34fdd87c955144a8f2e5b7a7df9f2ebdc14d38e51b32bc4e91a7da867481cfb554b37
-  languageName: node
-  linkType: hard
-
 "micromatch@npm:^4.0.2":
   version: 4.0.2
   resolution: "micromatch@npm:4.0.2"
@@ -3978,7 +3971,6 @@ fsevents@~2.1.2:
     eslint-plugin-standard: 4
     js-yaml: ^3.13.1
     lodash: ^4.17.15
-    microjob: ^0.7.0
     nyc: ^15.0.0
     rollup: ^2.2.0
     terser: ^4.6.7
