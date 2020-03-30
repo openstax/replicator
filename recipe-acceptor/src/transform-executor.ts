@@ -9,11 +9,11 @@ async function helper(args: RunArgs): Promise<void> {
       ?.transforms
       ?.filter((_: any, index: number) => {
         return index % args.numWorkers === args.workerID
-      }) || []
+      }) as Array<any> | undefined ?? []
   const fixtures = (args.fixturesPath == null)
     ? {}
     : (await import(args.fixturesPath))
-      ?.fixtures(broker) || {}
+      ?.fixtures(broker) as object | undefined ?? {}
   if (transformsToRun.length === 0) {
     console.error(`Warning (workerID ${args.workerID}): No transformations were passed to be run`)
   }

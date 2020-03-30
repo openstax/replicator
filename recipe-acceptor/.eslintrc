@@ -15,6 +15,15 @@
       "default": "generic",
       "readonly": "generic"
     }],
-   "@typescript-eslint/space-before-function-paren": ["error", "never"]
+   "@typescript-eslint/space-before-function-paren": ["error", "never"],
+   "@typescript-eslint/strict-boolean-expressions": ["error", {
+    "allowNullable": true,
+    "ignoreRhs": true,
+    "allowSafe": true
+   }],
+   "@typescript-eslint/restrict-template-expressions": ["error", {
+     "allowNumber": true,
+     "allowBoolean": true
+   }]
   }
 }
