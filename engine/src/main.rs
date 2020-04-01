@@ -4,18 +4,18 @@ mod select;
 
 // networking and io imports
 use std::fs;
-use std::io::{Read, Write};
+use std::io::{BufWriter, Read, Write};
 use std::os::unix::net::{UnixListener, UnixStream};
 use std::path::Path;
 
 // selection and tree parsing imports
 #[macro_use]
 extern crate rental;
-use roxmltree::{Document, NodeType};
+use roxmltree::{Document, Node, NodeType};
 use std::ops::Deref;
 
 // general
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::process::{Command, Stdio};
 
 // parallelism/concurrency
@@ -30,7 +30,9 @@ use indicatif::{ProgressBar, ProgressDrawTarget, ProgressStyle};
 
 // self
 use self::error::{OvenResult, RequestError, RequestResult};
-use self::schema::{Attribute, Element, QualifiedName, Request, Response, WriteInstruction};
+use self::schema::{
+  Attribute, Element, Namespace, QualifiedName, Request, Response, WriteInstruction,
+};
 use self::select::{resolve_selector, ActionableSelector};
 
 rental! {
@@ -121,11 +123,310 @@ impl DocumentWrapper {
         .collect()
     })
   }
+
+  fn to_write_instruction_queue(&self, results: &ReplacementMapping) -> Vec<WriteInstruction> {
+    let mut queue = vec![];
+    self.rent(|document| {
+      queue_self_or_map(document, &mut queue, document.root(), "default", &results);
+    });
+    queue
+  }
 }
 
 fn parse_file<T: AsRef<Path>>(path: T) -> OvenResult<DocumentWrapper> {
   let data = fs::read_to_string(path)?;
   DocumentWrapper::new(data)
+}
+
+#[derive(Copy, Clone)]
+enum WriteInstructionKind<'a, 'b: 'a> {
+  Document(Node<'a, 'b>),
+  StartElement(Node<'a, 'b>),
+  EndElement(Node<'a, 'b>),
+  Attributes(Node<'a, 'b>),
+  Namespaces(Node<'a, 'b>),
+  PI(Node<'a, 'b>),
+  Comment(Node<'a, 'b>),
+  Text(Node<'a, 'b>),
+}
+
+impl From<WriteInstructionKind<'_, '_>> for WriteInstruction {
+  fn from(wi_type: WriteInstructionKind) -> Self {
+    match wi_type {
+      WriteInstructionKind::Document(_) => WriteInstruction::Document,
+      WriteInstructionKind::StartElement(node) => {
+        let node_tag = node.tag_name();
+        WriteInstruction::StartElement {
+          qualified_name: QualifiedName {
+            uri: node_tag.namespace().unwrap_or("").to_owned(),
+            local_name: node_tag.name().to_owned(),
+          },
+        }
+      }
+      WriteInstructionKind::EndElement(node) => {
+        let node_tag = node.tag_name();
+        WriteInstruction::EndElement {
+          qualified_name: QualifiedName {
+            uri: node_tag.namespace().unwrap_or("").to_owned(),
+            local_name: node_tag.name().to_owned(),
+          },
+        }
+      }
+      WriteInstructionKind::Namespaces(node) => {
+        let difference = match node.parent_element().map(|p| p.namespaces()) {
+          Some(parent_ns_map) => node
+            .namespaces()
+            .iter()
+            .filter(|namespace| !parent_ns_map.iter().any(|n| n == *namespace))
+            .map(|namespace| namespace.into())
+            .collect::<Vec<Namespace>>(),
+          None => node
+            .namespaces()
+            .iter()
+            .map(|namespace| namespace.into())
+            .collect::<Vec<Namespace>>(),
+        };
+        WriteInstruction::Namespaces {
+          namespaces: difference,
+        }
+      }
+      WriteInstructionKind::Attributes(node) => WriteInstruction::Attributes {
+        attributes: node.attributes().into_iter().map(|a| a.into()).collect(),
+      },
+      WriteInstructionKind::PI(node) => WriteInstruction::PI {
+        target: node.pi().expect("Already checked node.").target.to_owned(),
+        value: node
+          .pi()
+          .expect("Already checked node.")
+          .value
+          .unwrap_or("")
+          .to_owned(),
+      },
+      WriteInstructionKind::Comment(node) => WriteInstruction::Comment {
+        text: node.text().unwrap().to_owned(),
+      },
+      WriteInstructionKind::Text(node) => WriteInstruction::Text {
+        text: node.text().unwrap().to_owned(),
+      },
+    }
+  }
+}
+
+impl From<&roxmltree::Attribute<'_>> for Attribute {
+  fn from(source: &roxmltree::Attribute) -> Attribute {
+    Attribute {
+      qualified_name: QualifiedName {
+        local_name: source.name().to_owned(),
+        uri: source.namespace().unwrap_or("").to_owned(),
+      },
+      value: source.value().to_owned(),
+    }
+  }
+}
+
+impl From<&roxmltree::Namespace<'_>> for Namespace {
+  fn from(source: &roxmltree::Namespace) -> Namespace {
+    Namespace {
+      prefix: source.name().unwrap_or("").to_owned(),
+      uri: source.uri().to_owned(),
+    }
+  }
+}
+
+type ReplacementMapping = HashMap<(usize, String), Vec<WriteInstruction>>;
+fn queue_self_or_map<'a, 'b: 'a>(
+  doc: &Document,
+  queue: &mut Vec<WriteInstruction>,
+  node: Node<'a, 'b>,
+  mode: &str,
+  mapping: &ReplacementMapping,
+) {
+  let instructions_from_map = mapping.get(&(node.get_id(), mode.to_owned()));
+  if let Some(instructions) = instructions_from_map {
+    instructions.iter().for_each(|instruction| {
+      match instruction {
+        WriteInstruction::Replace {
+          node_id: replace_node_id,
+          mode: replace_mode,
+        } => queue_self_or_map(
+          doc,
+          queue,
+          doc.get_node_by_id(*replace_node_id),
+          replace_mode,
+          mapping,
+        ),
+        _ => queue.push(instruction.clone()),
+      };
+    });
+    return;
+  }
+  match node.node_type() {
+    NodeType::Root => {
+      queue.push(WriteInstructionKind::Document(node).into());
+      node.children().for_each(|child| {
+        queue_self_or_map(doc, queue, child, mode, mapping);
+      });
+    }
+    NodeType::Element => {
+      queue.push(WriteInstructionKind::StartElement(node).into());
+      queue.push(WriteInstructionKind::Namespaces(node).into());
+      queue.push(WriteInstructionKind::Attributes(node).into());
+      node.children().for_each(|child| {
+        queue_self_or_map(doc, queue, child, mode, mapping);
+      });
+      queue.push(WriteInstructionKind::EndElement(node).into());
+    }
+    NodeType::PI => queue.push(WriteInstructionKind::PI(node).into()),
+    NodeType::Comment => queue.push(WriteInstructionKind::Comment(node).into()),
+    NodeType::Text => queue.push(WriteInstructionKind::Text(node).into()),
+  }
+}
+
+#[derive(Debug)]
+enum SerializationError {
+  BadWrite,
+  UnexpectedEOF,
+  UnsetURI(String),
+  UnexpectedInstruction,
+}
+
+trait WriteInstructionProcessor {
+  fn write_queue<T: Write>(
+    &self,
+    write: T,
+    queue: &mut VecDeque<WriteInstruction>,
+  ) -> Result<(), SerializationError>;
+}
+
+struct XmlRsProcessor;
+use std::borrow::Cow;
+use xml::attribute::Attribute as AttributeEvent;
+use xml::name::Name;
+use xml::namespace::Namespace as NamespaceEvent;
+use xml::writer::{EmitterConfig, XmlEvent};
+impl XmlRsProcessor {
+  fn write_queue<T: Write>(
+    &self,
+    write: T,
+    queue: &Vec<WriteInstruction>,
+  ) -> Result<(), SerializationError> {
+    let mut writer = EmitterConfig::new()
+      .write_document_declaration(false)
+      .create_writer(write);
+    let mut cursor = 0;
+    let mut ns_map: BTreeMap<String, String> = BTreeMap::new();
+    while let Some(event) = self.get_next_event(&mut cursor, &queue, &mut ns_map)? {
+      if let Err(_) = writer.write(event) {
+        return Err(SerializationError::BadWrite);
+      }
+    }
+    Ok(())
+  }
+
+  fn get_next_event<'a>(
+    &self,
+    cursor: &mut usize,
+    queue: &'a Vec<WriteInstruction>,
+    ns_map: &'a mut BTreeMap<String, String>,
+  ) -> Result<Option<XmlEvent<'a>>, SerializationError> {
+    let next = queue.get(*cursor);
+    *cursor += 1;
+    match next {
+      None => Ok(None),
+      Some(instruction) => match instruction {
+        WriteInstruction::StartElement { qualified_name } => {
+          let mut attr_cache: Vec<&Attribute> = vec![];
+          loop {
+            let next = queue.get(*cursor);
+            match next {
+              None => return Err(SerializationError::UnexpectedEOF),
+              Some(instruction) => match instruction {
+                WriteInstruction::Attributes { attributes } => {
+                  attr_cache.append(&mut attributes.iter().collect::<Vec<&Attribute>>());
+                  *cursor += 1;
+                }
+                WriteInstruction::Namespaces { namespaces } => {
+                  for namespace in namespaces {
+                    ns_map.insert(namespace.prefix.clone(), namespace.uri.clone());
+                  }
+                  *cursor += 1;
+                }
+                _ => break,
+              },
+            }
+          }
+          let mut attribute_events: Vec<AttributeEvent> = vec![];
+          for attr in attr_cache {
+            let uri = &attr.qualified_name.uri;
+            let prefix = match ns_map.iter().find(|(_, value)| *value == uri) {
+              Some((prefix, _)) => prefix,
+              None => match uri.len() {
+                0 => "",
+                _ => return Err(SerializationError::UnsetURI(uri.clone())),
+              },
+            };
+            let event = AttributeEvent {
+              name: Name {
+                local_name: attr.qualified_name.local_name.as_ref(),
+                namespace: if uri.len() > 0 {
+                  Some(uri.as_ref())
+                } else {
+                  None
+                },
+                prefix: if prefix.len() > 0 { Some(prefix) } else { None },
+              },
+              value: attr.value.as_ref(),
+            };
+            attribute_events.push(event)
+          }
+
+          let uri = &qualified_name.uri;
+          let prefix = match ns_map.iter().find(|(_, value)| *value == uri) {
+            Some((prefix, _)) => prefix,
+            None => match uri.len() {
+              0 => "",
+              _ => return Err(SerializationError::UnsetURI(uri.clone())),
+            },
+          };
+          let name = Name {
+            local_name: qualified_name.local_name.as_ref(),
+            namespace: if uri.len() > 0 {
+              Some(uri.as_ref())
+            } else {
+              None
+            },
+            prefix: if prefix.len() > 0 {
+              Some(prefix.as_ref())
+            } else {
+              None
+            },
+          };
+          Ok(Some(XmlEvent::StartElement {
+            name: name,
+            attributes: Cow::Owned(attribute_events),
+            namespace: Cow::Owned(NamespaceEvent(ns_map.clone())),
+          }))
+        }
+        WriteInstruction::EndElement { qualified_name: _ } => {
+          Ok(Some(XmlEvent::EndElement { name: None }))
+        }
+        WriteInstruction::Document => {
+          return self.get_next_event(cursor, queue, ns_map);
+        }
+        WriteInstruction::Text { text } => Ok(Some(XmlEvent::Characters(text.as_ref()))),
+        WriteInstruction::Comment { text } => Ok(Some(XmlEvent::Comment(text.as_ref()))),
+        WriteInstruction::PI { target, value } => Ok(Some(XmlEvent::ProcessingInstruction {
+          name: target.as_ref(),
+          data: if value.len() > 0 {
+            Some(value.as_ref())
+          } else {
+            None
+          },
+        })),
+        _ => Err(SerializationError::UnexpectedInstruction),
+      },
+    }
+  }
 }
 
 // async fn handle_request(
@@ -197,13 +498,22 @@ fn handle_request(
   Ok(())
 }
 
+#[derive(Debug)]
 struct StateManager {
   count: usize,
-  results: HashMap<(usize, String), Vec<WriteInstruction>>,
+  results: ReplacementMapping,
   progress: usize,
   completed: bool,
   error: Option<RequestError>,
   race_count: usize,
+}
+
+fn unwrap_results(state_manager: Arc<Mutex<StateManager>>) -> ReplacementMapping {
+  Arc::try_unwrap(state_manager)
+    .unwrap()
+    .into_inner()
+    .unwrap()
+    .results
 }
 
 fn main() {
@@ -222,6 +532,12 @@ fn main() {
         .required(true)
         .index(2),
     )
+    .arg(
+      Arg::with_name("OUTFILE")
+        .help("The output file")
+        .required(true)
+        .index(3),
+    )
     .get_matches();
 
   const SOCKET_PATH: &str = "/tmp/baking.sock";
@@ -229,16 +545,21 @@ fn main() {
   let listener = UnixListener::bind(SOCKET_PATH).unwrap();
   listener.set_nonblocking(true).unwrap();
 
-  const NUM_STEPS: u8 = 4;
+  const NUM_STEPS: u8 = 5;
 
   let baked_file_path =
     fs::canonicalize(matches.value_of("TARGET").expect("Argument is required")).unwrap();
   let manifest_file_path =
     fs::canonicalize(matches.value_of("MANIFEST").expect("Argument is required")).unwrap();
 
+  let out_file =
+    fs::File::create(matches.value_of("OUTFILE").expect("Argument is required")).unwrap();
+
+  let info_style = Style::new().bold().dim();
+
   println!(
     "{} Starting acceptor for manifest: {}",
-    style(format!("[1/{}]", NUM_STEPS)).bold().dim(),
+    info_style.apply_to(format!("[1/{}]", NUM_STEPS)),
     style(manifest_file_path.to_string_lossy()).dim()
   );
   let mut child_process = Command::new("node")
@@ -256,7 +577,10 @@ fn main() {
 
   println!(
     "{} Parsing file: {}",
-    style(format!("[2/{}]", NUM_STEPS)).bold().dim(),
+    info_style
+      .apply_to(format!("[2/{}]", NUM_STEPS))
+      .bold()
+      .dim(),
     style(baked_file_path.to_string_lossy()).dim()
   );
   let document = parse_file(baked_file_path).unwrap();
@@ -273,7 +597,7 @@ fn main() {
   let progress_bar = ProgressBar::hidden();
   progress_bar.set_prefix(&format!(
     "{} Collecting transforms: ",
-    style(format!("[3/{}]", NUM_STEPS)).bold().dim()
+    info_style.apply_to(format!("[3/{}]", NUM_STEPS))
   ));
   let template = "{prefix} {bar:.blue.dim.on_white} {pos:>4} / {len}";
   progress_bar.set_style(ProgressStyle::default_bar().template(template));
@@ -317,41 +641,57 @@ fn main() {
   println!("{}", style("### Report ###").bold());
   let not_good_style = Style::new().red().bold();
   let good_style = Style::new().green().bold();
-  let locked_manager = state_manager.lock().unwrap();
-  println!("Results: {:?}", locked_manager.results.iter().count());
-  println!(
-    "Races: {:?}",
-    if locked_manager.race_count > 0 {
-      &not_good_style
-    } else {
-      &good_style
-    }
-    .apply_to(locked_manager.race_count)
-  );
-  println!(
-    "Error: {:?}",
-    if locked_manager.error.is_some() {
-      &not_good_style
-    } else {
-      &good_style
-    }
-    .apply_to(&locked_manager.error)
-  );
+  {
+    let locked_manager = state_manager.lock().unwrap();
+    println!("Results: {:?}", locked_manager.results.iter().count());
+    println!(
+      "Races: {:?}",
+      if locked_manager.race_count > 0 {
+        &not_good_style
+      } else {
+        &good_style
+      }
+      .apply_to(locked_manager.race_count)
+    );
+    println!(
+      "Error: {:?}",
+      if locked_manager.error.is_some() {
+        &not_good_style
+      } else {
+        &good_style
+      }
+      .apply_to(&locked_manager.error)
+    );
+  }
 
   println!(
     "{} Shutting down acceptor...",
-    style(format!("[4/{}]", NUM_STEPS)).bold().dim(),
+    info_style
+      .apply_to(format!("[4/{}]", NUM_STEPS))
+      .bold()
+      .dim(),
   );
   child_process.kill().ok();
 
   println!(
     "{} Serializing...",
-    style(format!("[5/{}]", NUM_STEPS)).bold().dim(),
+    info_style
+      .apply_to(format!("[5/{}]", NUM_STEPS))
+      .bold()
+      .dim(),
   );
+  let results = unwrap_results(state_manager);
+  let write_instruction_queue = document.to_write_instruction_queue(&results);
+  let processor = XmlRsProcessor;
+  let writer = BufWriter::new(out_file);
+  processor
+    .write_queue(writer, &write_instruction_queue)
+    .unwrap();
 
-  
-  // TODO: serialize output
+  println!("{}", style("Done!").green().bold());
+
   // TODO: Intersection types to handle race conditions
+  // TOOD: Make SerializationError a real error and use fewer unwraps in serialization
   // TODO: Clean up error handling in main on OvenError with From impls
   // TODO: Pipe child process output to logfile or report afterwards?
 }

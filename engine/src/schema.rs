@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub(crate) struct QualifiedName {
   #[serde(rename = "u")]
   pub(crate) uri: String,
@@ -16,12 +16,20 @@ pub(crate) struct Element {
   pub(crate) node_id: usize,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 pub(crate) struct Attribute {
   #[serde(rename = "q")]
   pub(crate) qualified_name: QualifiedName,
   #[serde(rename = "v")]
   pub(crate) value: String,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub(crate) struct Namespace {
+  #[serde(rename = "p")]
+  pub(crate) prefix: String,
+  #[serde(rename = "u")]
+  pub(crate) uri: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -34,7 +42,7 @@ pub(crate) struct TransformResult {
   pub(crate) instructions: Vec<WriteInstruction>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, Debug, Clone)]
 pub(crate) enum WriteInstruction {
   #[serde(rename = "S")]
   StartElement {
@@ -56,12 +64,31 @@ pub(crate) enum WriteInstruction {
     #[serde(rename = "a")]
     attributes: Vec<Attribute>,
   },
+  #[serde(rename = "N")]
+  Namespaces {
+    #[serde(rename = "n")]
+    namespaces: Vec<Namespace>,
+  },
   #[serde(rename = "R")]
   Replace {
     #[serde(rename = "n")]
     node_id: usize,
     #[serde(rename = "m")]
     mode: String,
+  },
+  #[serde(rename = "D")]
+  Document,
+  #[serde(rename = "P")]
+  PI {
+    #[serde(rename = "t")]
+    target: String,
+    #[serde(rename = "v")]
+    value: String,
+  },
+  #[serde(rename = "C")]
+  Comment {
+    #[serde(rename = "t")]
+    text: String,
   },
 }
 

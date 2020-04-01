@@ -15,6 +15,7 @@ rental = "*"
 rayon = "*"
 indicatif = "*"
 console = "*"
+xml-rs = "*"
 
 [dependencies.clap]
 git = "https://github.com/clap-rs/clap/"

@@ -143,7 +143,7 @@ export class UnixSocketBroker implements Broker {
       // console.log(Buffer.byteLength(payload, 'utf8'))
       const connection: Socket = new Socket()
         .on('connect', () => {
-          connection.end(payload + '\n')
+          connection.end(payload)
         })
         .on('end', () => {
           resolve(undefined)
@@ -166,7 +166,7 @@ export class UnixSocketBroker implements Broker {
       const buffers: Array<Buffer> = []
       const connection = new Socket()
         .on('connect', () => {
-          connection.end(payload + '\n')
+          connection.end(payload)
         })
         .on('data', data => {
           // if (start === null) {
