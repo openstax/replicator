@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -e
+nyc --reporter=lcov ava $( [[ "${VERBOSE:-false}" = true ]] && echo '-v' ) ./test/integration/**/*.ts
+genhtml coverage/lcov.info -o coverage/

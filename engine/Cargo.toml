@@ -16,6 +16,7 @@ rayon = "*"
 indicatif = "*"
 console = "*"
 xml-rs = "*"
+rand = "*"
 
 [dependencies.clap]
 git = "https://github.com/clap-rs/clap/"
@@ -24,8 +25,3 @@ features = [ "suggestions", "color", "std", "cargo" ]
 
 [profile.dev]
 opt-level = 3
-
-[profile.release]
-opt-level = 3
-lto = true
-codegen-units = 1

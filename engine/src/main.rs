@@ -191,7 +191,7 @@ impl From<WriteInstructionKind<'_, '_>> for WriteInstruction {
         }
       }
       WriteInstructionKind::Attributes(node) => WriteInstruction::Attributes {
-        attributes: node.attributes().into_iter().map(|a| a.into()).collect(),
+        attributes: node.attributes().iter().map(|a| a.into()).collect(),
       },
       WriteInstructionKind::PI(node) => WriteInstruction::PI {
         target: node.pi().expect("Already checked node.").target.to_owned(),
@@ -308,7 +308,7 @@ impl XmlRsProcessor {
   fn write_queue<T: Write>(
     &self,
     write: T,
-    queue: &Vec<WriteInstruction>,
+    queue: &[WriteInstruction],
   ) -> Result<(), SerializationError> {
     let mut writer = EmitterConfig::new()
       .write_document_declaration(false)
@@ -316,7 +316,7 @@ impl XmlRsProcessor {
     let mut cursor = 0;
     let mut ns_map: BTreeMap<String, String> = BTreeMap::new();
     while let Some(event) = self.get_next_event(&mut cursor, &queue, &mut ns_map)? {
-      if let Err(_) = writer.write(event) {
+      if writer.write(event).is_err() {
         return Err(SerializationError::BadWrite);
       }
     }
@@ -326,7 +326,7 @@ impl XmlRsProcessor {
   fn get_next_event<'a>(
     &self,
     cursor: &mut usize,
-    queue: &'a Vec<WriteInstruction>,
+    queue: &'a [WriteInstruction],
     ns_map: &'a mut BTreeMap<String, String>,
   ) -> Result<Option<XmlEvent<'a>>, SerializationError> {
     let next = queue.get(*cursor);
@@ -368,12 +368,16 @@ impl XmlRsProcessor {
             let event = AttributeEvent {
               name: Name {
                 local_name: attr.qualified_name.local_name.as_ref(),
-                namespace: if uri.len() > 0 {
-                  Some(uri.as_ref())
-                } else {
+                namespace: if uri.is_empty() {
                   None
+                } else {
+                  Some(uri.as_ref())
                 },
-                prefix: if prefix.len() > 0 { Some(prefix) } else { None },
+                prefix: if prefix.is_empty() {
+                  None
+                } else {
+                  Some(prefix)
+                },
               },
               value: attr.value.as_ref(),
             };
@@ -383,44 +387,43 @@ impl XmlRsProcessor {
           let uri = &qualified_name.uri;
           let prefix = match ns_map.iter().find(|(_, value)| *value == uri) {
             Some((prefix, _)) => prefix,
-            None => match uri.len() {
-              0 => "",
-              _ => return Err(SerializationError::UnsetURI(uri.clone())),
-            },
+            None => {
+              if uri.is_empty() {
+                ""
+              } else {
+                return Err(SerializationError::UnsetURI(uri.clone()));
+              }
+            }
           };
           let name = Name {
             local_name: qualified_name.local_name.as_ref(),
-            namespace: if uri.len() > 0 {
+            namespace: if uri.is_empty() {
+              None
+            } else {
               Some(uri.as_ref())
-            } else {
-              None
             },
-            prefix: if prefix.len() > 0 {
-              Some(prefix.as_ref())
-            } else {
+            prefix: if prefix.is_empty() {
               None
+            } else {
+              Some(prefix)
             },
           };
           Ok(Some(XmlEvent::StartElement {
-            name: name,
+            name,
             attributes: Cow::Owned(attribute_events),
             namespace: Cow::Owned(NamespaceEvent(ns_map.clone())),
           }))
         }
-        WriteInstruction::EndElement { qualified_name: _ } => {
-          Ok(Some(XmlEvent::EndElement { name: None }))
-        }
-        WriteInstruction::Document => {
-          return self.get_next_event(cursor, queue, ns_map);
-        }
+        WriteInstruction::EndElement { .. } => Ok(Some(XmlEvent::EndElement { name: None })),
+        WriteInstruction::Document => self.get_next_event(cursor, queue, ns_map),
         WriteInstruction::Text { text } => Ok(Some(XmlEvent::Characters(text.as_ref()))),
         WriteInstruction::Comment { text } => Ok(Some(XmlEvent::Comment(text.as_ref()))),
         WriteInstruction::PI { target, value } => Ok(Some(XmlEvent::ProcessingInstruction {
           name: target.as_ref(),
-          data: if value.len() > 0 {
-            Some(value.as_ref())
-          } else {
+          data: if value.is_empty() {
             None
+          } else {
+            Some(value.as_ref())
           },
         })),
         _ => Err(SerializationError::UnexpectedInstruction),
@@ -429,7 +432,6 @@ impl XmlRsProcessor {
   }
 }
 
-// async fn handle_request(
 fn handle_request(
   document: &DocumentWrapper,
   mut stream: UnixStream,
@@ -535,14 +537,14 @@ fn main() {
     .arg(
       Arg::with_name("OUTFILE")
         .help("The output file")
-        .required(true)
+        .required(false)
         .index(3),
     )
     .get_matches();
 
-  const SOCKET_PATH: &str = "/tmp/baking.sock";
-  fs::remove_file(SOCKET_PATH).ok();
-  let listener = UnixListener::bind(SOCKET_PATH).unwrap();
+  let mut socket_path = std::env::temp_dir();
+  socket_path.push(format!("tmp-baking-{}.sock", rand::random::<u32>()));
+  let listener = UnixListener::bind(&socket_path).unwrap();
   listener.set_nonblocking(true).unwrap();
 
   const NUM_STEPS: u8 = 5;
@@ -552,22 +554,20 @@ fn main() {
   let manifest_file_path =
     fs::canonicalize(matches.value_of("MANIFEST").expect("Argument is required")).unwrap();
 
-  let out_file =
-    fs::File::create(matches.value_of("OUTFILE").expect("Argument is required")).unwrap();
-
   let info_style = Style::new().bold().dim();
 
-  println!(
+  eprintln!(
     "{} Starting acceptor for manifest: {}",
     info_style.apply_to(format!("[1/{}]", NUM_STEPS)),
     style(manifest_file_path.to_string_lossy()).dim()
   );
+  let mut path_to_js = std::env::current_exe().unwrap();
+  path_to_js.pop();
+  path_to_js.push("bake.js");
   let mut child_process = Command::new("node")
     .args(&[
-      "-r",
-      "./../recipe-acceptor/.pnp.js",
-      "./../recipe-acceptor/build/src/bake.js",
-      SOCKET_PATH,
+      path_to_js.to_str().unwrap(),
+      socket_path.to_str().unwrap(),
       manifest_file_path.to_str().unwrap(),
     ])
     .stderr(Stdio::inherit())
@@ -575,7 +575,7 @@ fn main() {
     .spawn()
     .unwrap();
 
-  println!(
+  eprintln!(
     "{} Parsing file: {}",
     info_style
       .apply_to(format!("[2/{}]", NUM_STEPS))
@@ -638,13 +638,13 @@ fn main() {
       }
     }
   });
-  println!("{}", style("### Report ###").bold());
+  eprintln!("{}", style("### Report ###").bold());
   let not_good_style = Style::new().red().bold();
   let good_style = Style::new().green().bold();
   {
     let locked_manager = state_manager.lock().unwrap();
-    println!("Results: {:?}", locked_manager.results.iter().count());
-    println!(
+    eprintln!("Results: {:?}", locked_manager.results.iter().count());
+    eprintln!(
       "Races: {:?}",
       if locked_manager.race_count > 0 {
         &not_good_style
@@ -653,7 +653,7 @@ fn main() {
       }
       .apply_to(locked_manager.race_count)
     );
-    println!(
+    eprintln!(
       "Error: {:?}",
       if locked_manager.error.is_some() {
         &not_good_style
@@ -664,7 +664,7 @@ fn main() {
     );
   }
 
-  println!(
+  eprintln!(
     "{} Shutting down acceptor...",
     info_style
       .apply_to(format!("[4/{}]", NUM_STEPS))
@@ -672,8 +672,9 @@ fn main() {
       .dim(),
   );
   child_process.kill().ok();
+  fs::remove_file(socket_path).ok();
 
-  println!(
+  eprintln!(
     "{} Serializing...",
     info_style
       .apply_to(format!("[5/{}]", NUM_STEPS))
@@ -683,17 +684,25 @@ fn main() {
   let results = unwrap_results(state_manager);
   let write_instruction_queue = document.to_write_instruction_queue(&results);
   let processor = XmlRsProcessor;
-  let writer = BufWriter::new(out_file);
+  let writer: Box<dyn Write> = match matches.value_of("OUTFILE") {
+    Some(file) => Box::new(fs::File::create(file).unwrap()),
+    None => Box::new(std::io::stdout()),
+  };
+  let buffered = BufWriter::new(writer);
   processor
-    .write_queue(writer, &write_instruction_queue)
+    .write_queue(buffered, &write_instruction_queue)
     .unwrap();
 
-  println!("{}", style("Done!").green().bold());
+  eprintln!("{}", style("Done!").green().bold());
 
   // TODO: Intersection types to handle race conditions
-  // TOOD: Make SerializationError a real error and use fewer unwraps in serialization
+  // TODO: Make SerializationError a real error and use fewer unwraps in serialization
+  // TODO: Refactor write processor to use xml-rs event builders
   // TODO: Clean up error handling in main on OvenError with From impls
   // TODO: Pipe child process output to logfile or report afterwards?
+  // TODO: use logger over console to report errors in recipe-acceptor
+  // TODO: Functional tests
+  // TODO: Benchmark tests
 }
 
 #[test]

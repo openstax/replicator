@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+set -e
+FIX=true npm run lint
+VERBOSE=true npm run test
+npm run clean
+npm run build
+cd engine
+cargo fmt
+cargo clippy
+cargo test
+cargo build --release
+cd -
+binary_dest=./build/src/replicator-engine
+[[ -f "$binary_dest" ]] && rm "$binary_dest"
+cp ./engine/target/release/replicator-engine "$binary_dest"
+npm run test:functional
+tarball_path=$(npm pack)
+mkdir -p dist
+tarball_dest="dist/${tarball_path}"
+[[ -f "$tarball_dest" ]] && rm "$tarball_dest"
+mv "$tarball_path" "$tarball_dest"
