@@ -34,10 +34,19 @@ const ACTUAL_FILE = 'actual.xml'
 const TRANSFORMS_FILE = 'transforms.js'
 const FIXTURES_FILE = 'fixtures.js'
 
+const children = []
+process.on('exit', () => {
+  children.forEach(child => {
+    if (child.exitCode == null) {
+      child.kill('SIGINT')
+    }
+  })
+})
+
 const runCase = async (t, name) => {
   const caseDir = path.resolve(CASES, name)
   const tmpDir = await tmp.dir({ unsafeCleanup: true })
-  const hasFixtures = false
+  let hasFixtures = false
   let jsOutput = ''
   await async.forEach(
     (await fs.readdir(caseDir)),
@@ -67,6 +76,7 @@ const runCase = async (t, name) => {
     let stdout = ''
     let stderr = ''
     const replicator = spawn(EXECUTABLE_FILE, [
+      '-c',
       path.resolve(caseDir, IN_FILE),
       tmpManifest
     ]).on('close', async code => {
@@ -87,6 +97,7 @@ const runCase = async (t, name) => {
       t.is(stdout, expected)
       resolve(undefined)
     })
+    children.push(replicator)
     replicator.stdout.on('data', data => stdout += data.toString())
     replicator.stderr.on('data', data => stderr += data.toString())
   })

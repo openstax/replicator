@@ -84,7 +84,7 @@ const reportComplete = (): string => {
 }
 const reportErrorRequest = (error: Error): string => {
   return JSON.stringify({
-    E: { m: error.toString() }
+    E: { m: error.stack ?? error.toString() }
   })
 }
 
@@ -236,6 +236,14 @@ export class Node {
 
   async children(): Promise<Array<Node>> {
     return this.select('/*')
+  }
+
+  equals(other: Node): boolean {
+    return this.nodeID === other.nodeID
+  }
+
+  id(): number {
+    return this.nodeID
   }
 
   name(): QualifiedName {

@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+set -e
+npm run clean
+tsc --build tsconfig.json
+cd engine
+cargo build --release
+cd -
+binary_dest=./build/src/replicator-engine
+[[ -f "$binary_dest" ]] && rm "$binary_dest"
+cp ./engine/target/release/replicator-engine "$binary_dest"

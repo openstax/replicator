@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+set -e
+nyc --silent --no-clean ava -v ./test/integration/**/*.ts
+cd engine
+cargo test
+cd -

@@ -4,7 +4,7 @@ import { Node, QualifiedName, Attribute } from './node'
 
 type ComponentResult = Array<WriteInstruction>
 type JsxAttributes = any
-type JsxChildren = Array<string | Promise<ComponentResult>>
+type JsxChildren = Array<string | Promise<ComponentResult> | JsxChildren>
 interface Props {
   attributes: JsxAttributes
   children: JsxChildren
@@ -48,14 +48,16 @@ export const Copy: ComponentFunction = async({ attributes, children }) => {
   // TODO: allow attributes that can transform properties of the given element
   const item: Node = attributes.item
   const nodeName = item.name()
+  if (nodeName.localName === '#text') {
+    return [new Text(await item.text())]
+  }
   const nodeAttributes = (await item.attributes())
     .reduce((acc, attr) => {
       const name = attr.qName.toExpandedName()
       const value = attr.value
       return { ...acc, [name]: value }
     }, {})
-  const content = children != null ? children : []
-  return queueWriteInstruction(nodeName.toExpandedName(), nodeAttributes, ...content)
+  return queueWriteInstruction(nodeName.toExpandedName(), nodeAttributes, ...children)
 }
 
 const pushAwaitChildren = async(queue: ComponentResult, children: JsxChildren): Promise<ComponentResult> => {
@@ -64,6 +66,8 @@ const pushAwaitChildren = async(queue: ComponentResult, children: JsxChildren): 
       queue.push(new Text(child))
     } else if (child instanceof Promise) {
       queue.push(...(await child))
+    } else if (Array.isArray(child)) {
+      await pushAwaitChildren(queue, child)
     } else {
       throw new TypeError(`Expected string or Promise. Got ${typeof child}`)
     }

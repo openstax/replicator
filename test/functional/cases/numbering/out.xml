@@ -1,0 +1,16 @@
+<root>
+  <h2>1 - Fruit</h2>
+  <ol>
+    <li>1.1 Apple</li>
+    <li>1.2 Pear</li>
+    <li>1.3 Grape</li>
+    <li>1.4 Mango</li>
+  </ol>
+  <h2>2 - Vehicles</h2>
+  <ol>
+    <li>2.1 Car</li>
+    <li>2.2 Bicycle</li>
+    <li>2.3 Boat</li>
+    <li>2.4 Airplane</li>
+  </ol>
+</root>

@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -e
+rm -rf ./build ./coverage ./.nyc_output ./dist
+find ./test -name actual.xml -exec rm {} \;

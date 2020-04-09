@@ -57,7 +57,7 @@ const runCommand = async(socketPath: string, manifestPath: string): Promise<void
 
     await broker.reportComplete()
   } catch (err) {
-    broker.reportError(err).catch(err => {
+    await broker.reportError(err).catch(err => {
       console.error('Uh oh! Error occurred while reporting error!')
       throw err
     })

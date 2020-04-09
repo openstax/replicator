@@ -18,6 +18,7 @@ export const resolveTransforms = async(transforms: Array<Transform>, broker: Bro
 
 async function helper(args: RunArgs): Promise<void> {
   const broker = new UnixSocketBroker(args.socketPath)
+  const root = await broker.getRoot()
   const transformsToRun = (args.transformsPath == null)
     ? []
     : (await import(args.transformsPath))
@@ -27,8 +28,7 @@ async function helper(args: RunArgs): Promise<void> {
       }) as Array<any> | undefined ?? []
   const fixtures = (args.fixturesPath == null)
     ? {}
-    : (await import(args.fixturesPath))
-      ?.fixtures(broker) as object | undefined ?? {}
+    : await (await import(args.fixturesPath))?.fixtures(root) as object | undefined ?? {}
   if (transformsToRun.length === 0) {
     console.error(`Warning (workerID ${args.workerID}): No transformations were passed to be run`)
   }

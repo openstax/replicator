@@ -534,11 +534,12 @@ fn main() {
         .required(true)
         .index(2),
     )
+    .arg(Arg::with_name("OUTFILE").help("The output file").index(3))
     .arg(
-      Arg::with_name("OUTFILE")
-        .help("The output file")
-        .required(false)
-        .index(3),
+      Arg::with_name("node-coverage")
+        .long("node-coverage")
+        .short('c')
+        .help("Run node worker with coverage reporting"),
     )
     .get_matches();
 
@@ -564,16 +565,32 @@ fn main() {
   let mut path_to_js = std::env::current_exe().unwrap();
   path_to_js.pop();
   path_to_js.push("bake.js");
-  let mut child_process = Command::new("node")
-    .args(&[
-      path_to_js.to_str().unwrap(),
-      socket_path.to_str().unwrap(),
-      manifest_file_path.to_str().unwrap(),
-    ])
-    .stderr(Stdio::inherit())
-    .stdout(Stdio::inherit())
-    .spawn()
-    .unwrap();
+  let mut child_process = if matches.is_present("node-coverage") {
+    Command::new("nyc")
+      .args(&[
+        "--silent",
+        "--no-clean",
+        "node",
+        path_to_js.to_str().unwrap(),
+        socket_path.to_str().unwrap(),
+        manifest_file_path.to_str().unwrap(),
+      ])
+      .stderr(Stdio::inherit())
+      .stdout(Stdio::inherit())
+      .spawn()
+      .unwrap()
+  } else {
+    Command::new("node")
+      .args(&[
+        path_to_js.to_str().unwrap(),
+        socket_path.to_str().unwrap(),
+        manifest_file_path.to_str().unwrap(),
+      ])
+      .stderr(Stdio::inherit())
+      .stdout(Stdio::inherit())
+      .spawn()
+      .unwrap()
+  };
 
   eprintln!(
     "{} Parsing file: {}",
@@ -671,7 +688,11 @@ fn main() {
       .bold()
       .dim(),
   );
-  child_process.kill().ok();
+  if matches.is_present("node-coverage") {
+    child_process.wait().unwrap();
+  } else {
+    child_process.kill().unwrap();
+  }
   fs::remove_file(socket_path).ok();
 
   eprintln!(
@@ -695,14 +716,14 @@ fn main() {
 
   eprintln!("{}", style("Done!").green().bold());
 
-  // TODO: Intersection types to handle race conditions
+  // TODO: Intersection types to provide tools to handle race conditions
   // TODO: Make SerializationError a real error and use fewer unwraps in serialization
   // TODO: Refactor write processor to use xml-rs event builders
   // TODO: Clean up error handling in main on OvenError with From impls
   // TODO: Pipe child process output to logfile or report afterwards?
   // TODO: use logger over console to report errors in recipe-acceptor
-  // TODO: Functional tests
   // TODO: Benchmark tests
+  // TODO: Add in text node selection in scandent with `:text`
 }
 
 #[test]

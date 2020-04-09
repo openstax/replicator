@@ -1,0 +1,10 @@
+{
+    "extends": "@istanbuljs/nyc-config-typescript",
+    "include": [
+      "build/src/**/*.js",
+      "src/**/*.ts"
+    ],
+    "require": [
+      "source-map-support/register"
+    ]
+}
