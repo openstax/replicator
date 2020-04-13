@@ -2,6 +2,7 @@ const test = require('ava')
 const fs = require('fs-extra')
 const path = require('path')
 const async = require('async')
+const { Sema } = require('async-sema')
 const tmp = require('tmp-promise')
 tmp.setGracefulCleanup()
 const { transformFileAsync } = require('@babel/core')
@@ -105,11 +106,15 @@ const runCase = async (t, name) => {
 
 runCase.title = (providedTitle = '', name) => `${providedTitle} case-${name}`.trim();
 
-(async () => {
-  async.forEach(
-    (await fs.readdir(CASES)),
-    async caseDir => {
-      test(runCase, caseDir)
-    }
-  )
-}).call()
+const caseNames = fs.readdirSync(CASES)
+const lock = new Sema(2, { capacity: caseNames.length })
+test.beforeEach(async t => {
+  await lock.acquire()
+})
+test.afterEach.always(t => {
+  lock.release()
+})
+
+caseNames.forEach(caseDir => {
+  test(runCase, caseDir)
+})

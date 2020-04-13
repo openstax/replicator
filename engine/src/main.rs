@@ -715,15 +715,6 @@ fn main() {
     .unwrap();
 
   eprintln!("{}", style("Done!").green().bold());
-
-  // TODO: Intersection types to provide tools to handle race conditions
-  // TODO: Make SerializationError a real error and use fewer unwraps in serialization
-  // TODO: Refactor write processor to use xml-rs event builders
-  // TODO: Clean up error handling in main on OvenError with From impls
-  // TODO: Pipe child process output to logfile or report afterwards?
-  // TODO: use logger over console to report errors in recipe-acceptor
-  // TODO: Benchmark tests
-  // TODO: Add in text node selection in scandent with `:text`
 }
 
 #[test]

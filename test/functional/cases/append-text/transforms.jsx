@@ -6,7 +6,7 @@ module.exports.transforms = [
       <Copy item={node}>
         {(await node.children()).map(child => {
           return child.name().localName == '#text'
-            ? <>{'Fancy '}<Copy item={child} /></>
+            ? <>Fancy <Copy item={child} /></>
             : <Replace item={child} mode='default' />
         })}
       </Copy>

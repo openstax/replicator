@@ -44,7 +44,7 @@ export class Attributes implements WriteInstruction {
   }
 
   toRequestObj(): any {
-    return { A: { a: this.attributes } }
+    return { A: { a: this.attributes.map(attribute => attribute.toRequestObj()) } }
   }
 }
 

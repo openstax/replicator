@@ -1,4 +1,4 @@
-const { Transform, Fragment, Replace, queueWriteInstruction, Copy } = require('replicator')
+const { Transform, Fragment, queueWriteInstruction, Copy } = require('replicator')
 
 module.exports.transforms = [
   new Transform('//h2', 'default', async (node, { getCount, allHeaders }) => {

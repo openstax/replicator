@@ -1,0 +1,16 @@
+<root class="root">
+  <h2>Fruit</h2>
+  <ol>
+    <li>Apple</li>
+    <li>Pear</li>
+    <li>Grape</li>
+    <li>Mango</li>
+  </ol>
+  <h2>Vehicles</h2>
+  <ol>
+    <li>Car</li>
+    <li>Bicycle</li>
+    <li>Boat</li>
+    <li>Airplane</li>
+  </ol>
+</root>

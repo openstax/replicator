@@ -44,14 +44,49 @@ export class TransformResult {
   }
 }
 
+type AttrMapping = [string, (value?: string) => string]
 export const Copy: ComponentFunction = async({ attributes, children }) => {
-  // TODO: allow attributes that can transform properties of the given element
   const item: Node = attributes.item
-  const nodeName = item.name()
+  let nodeName = item.name()
   if (nodeName.localName === '#text') {
     return [new Text(await item.text())]
   }
-  const nodeAttributes = (await item.attributes())
+  if (attributes.nameMap != null) {
+    nodeName = QualifiedName.fromExpandedName(attributes.nameMap(nodeName.localName, nodeName.uri))
+  }
+
+  let originalAttributes = await item.attributes()
+  console.error(originalAttributes)
+  if (attributes.attrMap != null) {
+    const attrMap = Object.entries(attributes.attrMap) as Array<AttrMapping>
+    attrMap.forEach((attrMapping: AttrMapping) => {
+      const [name, mapping] = attrMapping
+      const match = originalAttributes.filter(attr => {
+        return attr.qName.localName == name || attr.qName.toExpandedName() == name
+      })
+      if (match.length === 0) {
+        originalAttributes.push(new Attribute(QualifiedName.fromExpandedName(name), mapping()))
+        console.error("PUSHED")
+        return
+      }
+      const matchMapped = match.reduce((acc, attr) => {
+        const mapping = attributes.attrMap[attr.qName.toExpandedName()] ?? attributes.attrMap[attr.qName.localName]
+        console.error(mapping)
+        const newValue = mapping(attr.value)
+        if (newValue == null) { return acc }
+        attr.value = newValue
+        acc.push(attr)
+        return acc
+      }, [] as Array<Attribute>)
+      const notMatch = originalAttributes.filter(attr => {
+        return !(attr.qName.localName == name || attr.qName.toExpandedName() == name)
+      })
+      console.error(notMatch)
+      console.error(matchMapped)
+      originalAttributes = notMatch.concat(matchMapped)
+    })
+  }
+  const nodeAttributes = originalAttributes
     .reduce((acc, attr) => {
       const name = attr.qName.toExpandedName()
       const value = attr.value
