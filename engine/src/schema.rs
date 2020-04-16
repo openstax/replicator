@@ -149,4 +149,9 @@ pub(crate) enum Response {
     #[serde(rename = "a")]
     attributes: Vec<Attribute>,
   },
+  #[serde(rename = "B")]
+  BadRequest {
+    #[serde(rename = "r")]
+    reason: String,
+  },
 }

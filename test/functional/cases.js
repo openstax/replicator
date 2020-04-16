@@ -77,10 +77,11 @@ const runCase = async (t, name) => {
     let stdout = ''
     let stderr = ''
     const replicator = spawn(EXECUTABLE_FILE, [
-      '-c',
+      '--node-coverage',
+      '--node-workers=1',
       path.resolve(caseDir, IN_FILE),
       tmpManifest
-    ]).on('close', async code => {
+    ]).on('exit', async code => {
       if (code !== 0) {
         console.error(stderr)
       }
@@ -107,7 +108,7 @@ const runCase = async (t, name) => {
 runCase.title = (providedTitle = '', name) => `${providedTitle} case-${name}`.trim();
 
 const caseNames = fs.readdirSync(CASES)
-const lock = new Sema(2, { capacity: caseNames.length })
+const lock = new Sema(3, { capacity: caseNames.length })
 test.beforeEach(async t => {
   await lock.acquire()
 })

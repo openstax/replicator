@@ -7,12 +7,11 @@ import workerFarm from 'worker-farm'
 // https://stackoverflow.com/a/37980601/1502122
 const range = (n: number): Array<number> => [...Array(n).keys()]
 
-const runCommand = async(socketPath: string, manifestPath: string): Promise<void> => {
+const runCommand = async(socketPath: string, manifestPath: string, numWorkers: number): Promise<void> => {
   const socketPathAbsolute = path.resolve(socketPath)
   const manifestPathAbsolute = path.resolve(manifestPath)
 
   const broker = new UnixSocketBroker(socketPathAbsolute)
-  const numWorkers = 2
   const workers = workerFarm(path.resolve(__dirname, './transform-executor'), ['run'])
   process.on('exit', (_: number) => {
     workerFarm.end(workers)
@@ -68,4 +67,5 @@ const runCommand = async(socketPath: string, manifestPath: string): Promise<void
 
 const socketPath = process.argv[2]
 const manifestPath = process.argv[3]
-runCommand(socketPath, manifestPath).catch(err => { console.error(err) })
+const numWorkers = parseInt(process.argv[4])
+runCommand(socketPath, manifestPath, numWorkers).catch(err => { console.error(err) })

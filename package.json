@@ -12,7 +12,7 @@
     "lint": "bash ./script/lint",
     "test:integration": "bash ./script/integration-test",
     "test:functional": "ava -v ./test/functional/cases.js",
-    "test:all": "npm run build && npm run test:integration && npm run test:functional && npm run cover:report",
+    "test:all": "npm run build && npm run lint && npm run test:integration && npm run test:functional && npm run cover:report",
     "clean": "bash ./script/clean",
     "build": "bash ./script/build",
     "package": "bash ./script/package",

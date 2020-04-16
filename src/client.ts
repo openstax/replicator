@@ -62,11 +62,11 @@ export const Copy: ComponentFunction = async({ attributes, children }) => {
     attrMap.forEach((attrMapping: AttrMapping) => {
       const [name, mapping] = attrMapping
       const match = originalAttributes.filter(attr => {
-        return attr.qName.localName == name || attr.qName.toExpandedName() == name
+        return attr.qName.localName === name || attr.qName.toExpandedName() === name
       })
       if (match.length === 0) {
         originalAttributes.push(new Attribute(QualifiedName.fromExpandedName(name), mapping()))
-        console.error("PUSHED")
+        console.error('PUSHED')
         return
       }
       const matchMapped = match.reduce((acc, attr) => {
@@ -79,7 +79,7 @@ export const Copy: ComponentFunction = async({ attributes, children }) => {
         return acc
       }, [] as Array<Attribute>)
       const notMatch = originalAttributes.filter(attr => {
-        return !(attr.qName.localName == name || attr.qName.toExpandedName() == name)
+        return !(attr.qName.localName === name || attr.qName.toExpandedName() === name)
       })
       console.error(notMatch)
       console.error(matchMapped)

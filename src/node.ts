@@ -161,23 +161,21 @@ export class UnixSocketBroker implements Broker {
 
   async socketConnection(payload: string): Promise<any> {
     return new Promise((resolve, reject) => {
-      // let start: [number, number] | null = null
       const buffers: Array<Buffer> = []
       const connection = new Socket()
         .on('connect', () => {
           connection.end(payload)
         })
         .on('data', data => {
-          // if (start === null) {
-          //   start = process.hrtime()
-          // }
           buffers.push(data)
         })
         .on('end', () => {
-          // let end = process.hrtime()
-          // console.info('Execution time (hr): %ds %dms', end[0], end[1] / 1000000)
-          const response = Buffer.concat(buffers).toString()
-          resolve(JSON.parse(response))
+          const responseString = Buffer.concat(buffers).toString()
+          const responseObj = JSON.parse(responseString)
+          if (responseObj?.B?.r != null) {
+            reject(new Error(responseObj.B.r))
+          }
+          resolve(responseObj)
         })
         .on('error', (err: any) => {
           if (err.code === 'EAGAIN') {
@@ -236,6 +234,10 @@ export class Node {
 
   async children(): Promise<Array<Node>> {
     return this.select('/*')
+  }
+
+  isText(): boolean {
+    return this.name().localName === '#text'
   }
 
   equals(other: Node): boolean {

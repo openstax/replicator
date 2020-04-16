@@ -442,19 +442,23 @@ fn handle_request(
   let request = serde_json::from_str(&request_string)?;
 
   let response: Response = match request {
-    Request::Selection { node_id, selector } => {
-      let selector = ActionableSelector::from_string(selector)?;
-      let selected = document.select(node_id, &selector);
-      Response::Selection {
-        elements: selected
-          .iter()
-          .map(|&node_id| Element {
-            node_id,
-            qualified_name: document.qualified_name(node_id),
-          })
-          .collect(),
+    Request::Selection { node_id, selector } => match ActionableSelector::from_string(selector) {
+      Ok(sel) => {
+        let selected = document.select(node_id, &sel);
+        Response::Selection {
+          elements: selected
+            .iter()
+            .map(|&node_id| Element {
+              node_id,
+              qualified_name: document.qualified_name(node_id),
+            })
+            .collect(),
+        }
       }
-    }
+      Err(err) => Response::BadRequest {
+        reason: format!("{}", err),
+      },
+    },
     Request::Text { node_id } => Response::Text {
       text: document.text(node_id),
     },
@@ -534,12 +538,26 @@ fn main() {
         .required(true)
         .index(2),
     )
-    .arg(Arg::with_name("OUTFILE").help("The output file").index(3))
+    .arg(
+      Arg::with_name("OUTFILE")
+        .help("The output file")
+        .required(false)
+        .index(3),
+    )
     .arg(
       Arg::with_name("node-coverage")
         .long("node-coverage")
         .short('c')
+        .takes_value(false)
         .help("Run node worker with coverage reporting"),
+    )
+    .arg(
+      Arg::with_name("node-workers")
+        .long("node-workers")
+        .short('w')
+        .takes_value(true)
+        .default_value("2")
+        .help("The number of node workers to use"),
     )
     .get_matches();
 
@@ -574,6 +592,7 @@ fn main() {
         path_to_js.to_str().unwrap(),
         socket_path.to_str().unwrap(),
         manifest_file_path.to_str().unwrap(),
+        matches.value_of("node-workers").unwrap(),
       ])
       .stderr(Stdio::inherit())
       .stdout(Stdio::inherit())
@@ -585,6 +604,7 @@ fn main() {
         path_to_js.to_str().unwrap(),
         socket_path.to_str().unwrap(),
         manifest_file_path.to_str().unwrap(),
+        matches.value_of("node-workers").unwrap(),
       ])
       .stderr(Stdio::inherit())
       .stdout(Stdio::inherit())
@@ -670,15 +690,10 @@ fn main() {
       }
       .apply_to(locked_manager.race_count)
     );
-    eprintln!(
-      "Error: {:?}",
-      if locked_manager.error.is_some() {
-        &not_good_style
-      } else {
-        &good_style
-      }
-      .apply_to(&locked_manager.error)
-    );
+    match locked_manager.error {
+      Some(ref err) => eprintln!("Error: {}", not_good_style.apply_to(err)),
+      None => eprintln!("Error: {}", good_style.apply_to("None")),
+    };
   }
 
   eprintln!(

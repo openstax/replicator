@@ -1,7 +1,7 @@
 use roxmltree::{Attribute, Node};
 use scandent::{
-  AttributeRequirement, AttributeRequirementOperation, Axis, Namespace, ScandentResult, Selector,
-  Step,
+  ArgValue, AttributeRequirement, AttributeRequirementOperation, Axis, Namespace, Predicate,
+  ScandentResult, Selector, Step,
 };
 use std::borrow::Cow;
 use std::collections::BTreeSet;
@@ -40,10 +40,10 @@ struct ActionableStep {
 }
 
 impl ActionableStep {
-  fn from_step(step: Step) -> ActionableStep {
+  fn condition_from_predicate(predicate: Predicate) -> Box<dyn Fn(Node) -> bool + Sync + Send> {
     let mut conditions: Vec<Box<dyn Fn(Node) -> bool + Sync + Send>> = vec![];
 
-    let name_requirement = step.name;
+    let name_requirement = predicate.name;
     if let Some(localname) = name_requirement.localname {
       conditions.push(Box::from(move |node: Node| {
         node.tag_name().name() == localname
@@ -73,7 +73,7 @@ impl ActionableStep {
       };
     }
 
-    let attr_requirements = step.attributes;
+    let attr_requirements = predicate.attributes;
     for attr_req in attr_requirements {
       let AttributeRequirement {
         name: attr_name_req,
@@ -122,7 +122,7 @@ impl ActionableStep {
       }));
     }
 
-    let path_requirements = step.paths;
+    let path_requirements = predicate.paths;
     for path_req in path_requirements {
       let actionable = ActionableSelector::from_selector(path_req);
       conditions.push(Box::from(move |node: Node| {
@@ -130,16 +130,36 @@ impl ActionableStep {
       }));
     }
 
-    let check_functions_requirements = step.checks;
-    for _check_function_req in check_functions_requirements {
-      conditions.push(Box::from(move |_node: Node| {
-        true // Unimplemented
-      }));
+    let check_functions_requirements = predicate.checks;
+    for check_function_req in check_functions_requirements {
+      match check_function_req.name.as_ref() {
+        "element" => {
+          conditions.push(Box::from(move |node: Node| node.is_element()));
+        }
+        "text" => {
+          conditions.push(Box::from(move |node: Node| node.is_text()));
+        }
+        "not" => match &check_function_req.args[0] {
+          ArgValue::PredicateValue(predicate_arg) => {
+            let predicate_condition =
+              ActionableStep::condition_from_predicate(predicate_arg.clone());
+            conditions.push(Box::from(move |node: Node| !predicate_condition(node)));
+          }
+          _ => panic!("Bad argument type"),
+        },
+        _ => {
+          conditions.push(Box::from(move |_node: Node| unimplemented!()));
+        }
+      };
     }
 
+    Box::from(move |node: Node| conditions.iter().all(|condition| condition(node)))
+  }
+
+  fn from_step(step: Step) -> ActionableStep {
     ActionableStep {
       axis: step.axis,
-      condition: Box::from(move |node: Node| conditions.iter().all(|condition| condition(node))),
+      condition: ActionableStep::condition_from_predicate(step.predicate),
     }
   }
 }

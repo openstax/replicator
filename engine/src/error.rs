@@ -76,3 +76,24 @@ impl From<io::Error> for RequestError {
     RequestError::Misc(err)
   }
 }
+
+impl fmt::Display for RequestError {
+  fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    write!(
+      f,
+      "{}: {}",
+      match &self {
+        RequestError::ScandentParseError(..) => "ScandentParseError",
+        RequestError::ChildTerminated(..) => "ChildTerminated",
+        RequestError::JsonParseError(..) => "JsonParseError",
+        RequestError::Misc(..) => "Misc",
+      },
+      match &self {
+        RequestError::ScandentParseError(err) => err.to_string(),
+        RequestError::ChildTerminated(err) => err.clone(),
+        RequestError::JsonParseError(err) => err.to_string(),
+        RequestError::Misc(err) => err.to_string(),
+      }
+    )
+  }
+}
