@@ -100,10 +100,18 @@ impl DocumentWrapper {
     })
   }
 
+  fn deep_text(node: Node) -> String {
+    node.descendants()
+      .filter_map(|descendant| {
+          if descendant.is_text() { descendant.text() } else { None }
+      })
+      .collect()
+  }
+
   fn text(&self, id: usize) -> String {
     self.rent(|document| {
       let node = document.get_node_by_id(id);
-      node.deep_text().unwrap_or_else(|| "".to_owned())
+      Self::deep_text(node)
     })
   }
 
