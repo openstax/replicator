@@ -2,8 +2,6 @@ const { Transform, Fragment, queueWriteInstruction, Copy } = require('replicator
 
 module.exports.transforms = [
   new Transform('//h2', 'default', async (node, { getCount, allHeaders }) => {
-    console.error(allHeaders)
-    console.error(node)
     const count = getCount({within: allHeaders, to: node})
     const textNode = (await node.children())[0]
     return (

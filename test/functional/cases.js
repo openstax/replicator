@@ -25,6 +25,7 @@ const BABEL_CONFIG = {
   ]
 }
 const PROJECT_HOME = path.resolve(__dirname, '../..')
+const PROJECT_DEPS = path.resolve(PROJECT_HOME, 'node_modules')
 const PROJECT_MAIN = path.resolve(PROJECT_HOME, 'build/src/client.js')
 const EXECUTABLE_FILE = path.resolve(PROJECT_HOME, 'build/src/replicator-engine')
 const CASES = path.resolve(__dirname, 'cases')
@@ -44,11 +45,19 @@ process.on('exit', () => {
   })
 })
 
+const shimRequires = code => {
+  return code
+    .replace(/require\(['](?!replicator)(.*?)[']\)/g, (_, p1) => `require('${PROJECT_DEPS}/${p1}')`)
+    .replace(/require\(["](?!replicator)(.*?)["]\)/g, (_, p1) => `require('${PROJECT_DEPS}/${p1}')`)
+    .replace(/require\([']replicator[']\)/g, `require('${PROJECT_MAIN}')`)
+    .replace(/require\(["]replicator["]\)/g, `require('${PROJECT_MAIN}')`)
+}
+
 const runCase = async (t, name) => {
   const caseDir = path.resolve(CASES, name)
   const tmpDir = await tmp.dir({ unsafeCleanup: true })
   let hasFixtures = false
-  let jsOutput = ''
+  let jsOutput = []
   await async.forEach(
     (await fs.readdir(caseDir)),
     async file => {
@@ -58,8 +67,15 @@ const runCase = async (t, name) => {
       }
       if (file.endsWith('.jsx')) {
         const { code } = await transformFileAsync(file_path, BABEL_CONFIG)
-        jsOutput = code.replace(/require\(['"]replicator['"]\)/, `require('${PROJECT_MAIN}')`)
-        await fs.writeFile(path.resolve(tmpDir.path, path.basename(file, '.jsx') + '.js'), jsOutput)
+        const shimmedCode = shimRequires(code)
+        const newFilename = path.basename(file, '.jsx') + '.js'
+        jsOutput.push([newFilename, shimmedCode])
+        await fs.writeFile(path.resolve(tmpDir.path, newFilename), shimmedCode)
+      } else if (file.endsWith('.js')) {
+        const code = await fs.readFile(file_path, 'utf8')
+        const shimmedCode = shimRequires(code)
+        jsOutput.push([file, shimmedCode])
+        await fs.writeFile(path.resolve(tmpDir.path, path.basename(file)), shimmedCode)
       } else {
         const data = await fs.readFile(file_path)
         await fs.writeFile(path.resolve(tmpDir.path, path.basename(file)), data)
@@ -79,6 +95,7 @@ const runCase = async (t, name) => {
     const replicator = spawn(EXECUTABLE_FILE, [
       '--node-coverage',
       '--node-workers=1',
+      '--pretty-print',
       path.resolve(caseDir, IN_FILE),
       tmpManifest
     ]).on('exit', async code => {
@@ -92,7 +109,10 @@ const runCase = async (t, name) => {
         console.error(stderr)
         console.error('-------------------------')
         console.error('------- js output -------')
-        console.error(jsOutput)
+        for (const [filename, output] of jsOutput) {
+          console.error(`// ${filename}`)
+          console.error(output)
+        }
         console.error('-------------------------')
         await fs.writeFile(path.resolve(caseDir, ACTUAL_FILE), stdout)
       }

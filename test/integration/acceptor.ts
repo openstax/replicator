@@ -134,7 +134,7 @@ test('transforms_run_in_parallel', async t => {
   t.is(mockBroker.reportedResults[2].nodeID, 1)
 })
 
-test('error_repored_when_occurs', async t => {
+test('error_reported_when_occurs', async t => {
   const mockMemo = {
     getRoot: function() { return new Node(0, new QualifiedName('ROOT', ''), this as unknown as Broker) },
     select: {

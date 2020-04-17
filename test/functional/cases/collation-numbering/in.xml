@@ -1,0 +1,65 @@
+<book>
+  <title>Example Book</title>
+  <chapter>
+    <title>The First Chapter</title>
+    <p>Content000</p>
+    <exercise class="easy-math">
+      <problem>What is 1 + 1?</problem>
+      <solution>2</solution>
+    </exercise>
+    <p>Content001</p>
+    <exercise class="easy-math">
+      <problem>What is 2 + 4?</problem>
+      <solution>6</solution>
+    </exercise>
+    <p>Content002</p>
+    <exercise class="vegetables">
+      <problem>
+        Which of these is a vegetable?
+        <ol>
+          <li>Table</li>
+          <li>Sofa</li>
+          <li>Crocodile</li>
+          <li>Carrot</li>
+        </ol>
+      </problem>
+      <solution>Carrot</solution>
+    </exercise>
+    <p>Content003</p>
+  </chapter>
+  <chapter>
+    <title>The Second Chapter</title>
+    <p>Content004</p>
+    <exercise class="vegetables">
+      <problem>
+        What color is an eggplant?
+        <ol>
+          <li>Salmon</li>
+          <li>Purple</li>
+          <li>Coral</li>
+          <li>Neon-yellow</li>
+        </ol>
+      </problem>
+      <solution>Purple</solution>
+    </exercise>
+    <p>Content005</p>
+    <exercise class="easy-math">
+      <problem>What is 8 - 5?</problem>
+      <solution>3</solution>
+    </exercise>
+    <p>Content006</p>
+    <exercise class="vegetables">
+      <problem>
+        Where do potatoes grow?
+        <ol>
+          <li>Pants pockets</li>
+          <li>Only in Tunisia</li>
+          <li>The ground</li>
+          <li>Mr. Toad's Wild Ride</li>
+        </ol>
+      </problem>
+      <solution>The ground</solution>
+    </exercise>
+    <p>Content007</p>
+  </chapter>
+</book>

@@ -10,7 +10,7 @@ interface Props {
   children: JsxChildren
 }
 type ComponentFunction = (_: Props) => Promise<ComponentResult>
-type ReplacementFunction = (node: Node, fixtures?: any) => Promise<ComponentResult>
+type ReplacementFunction = (node: Node, fixtures?: any) => Promise<ComponentResult | undefined>
 
 export class Transform {
   selector: string
@@ -37,16 +37,19 @@ export class TransformResult {
   mode: string
   instructions: Array<WriteInstruction>
 
-  constructor(nodeID: number, mode: string, instructions: Array<WriteInstruction>) {
+  constructor(nodeID: number, mode: string, instructions?: Array<WriteInstruction>) {
     this.nodeID = nodeID
     this.mode = mode
-    this.instructions = instructions
+    this.instructions = instructions ?? []
   }
 }
 
 type AttrMapping = [string, (value?: string) => string]
 export const Copy: ComponentFunction = async({ attributes, children }) => {
   const item: Node = attributes.item
+  if (item == null) {
+    throw new Error('Must provide item to Copy.')
+  }
   let nodeName = item.name()
   if (nodeName.localName === '#text') {
     return [new Text(await item.text())]
@@ -56,7 +59,6 @@ export const Copy: ComponentFunction = async({ attributes, children }) => {
   }
 
   let originalAttributes = await item.attributes()
-  console.error(originalAttributes)
   if (attributes.attrMap != null) {
     const attrMap = Object.entries(attributes.attrMap) as Array<AttrMapping>
     attrMap.forEach((attrMapping: AttrMapping) => {
@@ -66,12 +68,10 @@ export const Copy: ComponentFunction = async({ attributes, children }) => {
       })
       if (match.length === 0) {
         originalAttributes.push(new Attribute(QualifiedName.fromExpandedName(name), mapping()))
-        console.error('PUSHED')
         return
       }
       const matchMapped = match.reduce((acc, attr) => {
         const mapping = attributes.attrMap[attr.qName.toExpandedName()] ?? attributes.attrMap[attr.qName.localName]
-        console.error(mapping)
         const newValue = mapping(attr.value)
         if (newValue == null) { return acc }
         attr.value = newValue
@@ -81,8 +81,6 @@ export const Copy: ComponentFunction = async({ attributes, children }) => {
       const notMatch = originalAttributes.filter(attr => {
         return !(attr.qName.localName === name || attr.qName.toExpandedName() === name)
       })
-      console.error(notMatch)
-      console.error(matchMapped)
       originalAttributes = notMatch.concat(matchMapped)
     })
   }
@@ -104,7 +102,7 @@ const pushAwaitChildren = async(queue: ComponentResult, children: JsxChildren): 
     } else if (Array.isArray(child)) {
       await pushAwaitChildren(queue, child)
     } else {
-      throw new TypeError(`Expected string or Promise. Got ${typeof child}`)
+      throw new TypeError(`Expected string or Promise. Got ${typeof child}: ${JSON.stringify(child)}`)
     }
   }
   return queue
@@ -113,14 +111,26 @@ const pushAwaitChildren = async(queue: ComponentResult, children: JsxChildren): 
 export const Replace: ComponentFunction = async({ attributes }) => {
   const item: Node = attributes.item
   const mode: string = attributes.mode
+  if (item == null || mode == null) {
+    throw new Error('Must provide both item and mode to Replace.')
+  }
   return Promise.resolve([new ReplaceInstruction(item, mode)])
 }
 
 export const ReplaceChildren: ComponentFunction = async({ attributes }) => {
   const item: Node = attributes.item
   const mode: string = attributes.mode
+  if (item == null || mode == null) {
+    throw new Error('Must provide both item and mode to ReplaceChildren.')
+  }
   const itemChildren = await item.children()
-  return Promise.resolve(itemChildren.map(child => new ReplaceInstruction(child, mode)))
+  return Promise.resolve(itemChildren.map(child => {
+    if (child == null) {
+      throw new Error('Child of ReplaceChildren item is null.')
+    }
+    return new ReplaceInstruction(child, mode)
+  }
+  ))
 }
 
 export const Fragment: ComponentFunction = async({ children }) => {
@@ -147,5 +157,5 @@ export const queueWriteInstruction = async(name: string | ComponentFunction, att
     queue.push(new EndElement(elementName))
     return queue
   }
-  throw new TypeError(`Expected string or function. Got ${typeof name}`)
+  throw new TypeError(`Expected string or function. Got ${typeof name}: ${JSON.stringify(name)}`)
 }

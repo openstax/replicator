@@ -215,6 +215,10 @@ export class Node {
     return this.broker.select(this.nodeID, selector)
   }
 
+  async selectOne(selector: string): Promise<Node> {
+    return (await this.broker.select(this.nodeID, selector))[0]
+  }
+
   async text(): Promise<string> {
     return this.broker.getText(this.nodeID)
   }

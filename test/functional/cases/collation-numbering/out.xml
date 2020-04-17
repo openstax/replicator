@@ -1,0 +1,121 @@
+<book>
+  <title>Example Book</title>
+  <chapter>
+    <number>1</number>
+    <title>The First Chapter</title>
+    <p>Content000</p>
+    
+    <p>Content001</p>
+    
+    <p>Content002</p>
+    
+    <p>Content003</p>
+  <exercises-collated>
+      <collation class="vegetables-exercises">
+        <exercise class="vegetables">
+          <number>1.1</number>
+      <problem>
+        Which of these is a vegetable?
+        <ol>
+          <li>Table</li>
+          <li>Sofa</li>
+          <li>Crocodile</li>
+          <li>Carrot</li>
+        </ol>
+      </problem>
+      
+    </exercise>
+      </collation>
+      <collation class="easy-math-exercises">
+        <exercise class="easy-math">
+          <number>1.2</number>
+      <problem>What is 1 + 1?</problem>
+      
+    </exercise>
+        <exercise class="easy-math">
+          <number>1.3</number>
+      <problem>What is 2 + 4?</problem>
+      
+    </exercise>
+      </collation>
+    </exercises-collated>
+  </chapter>
+  <chapter>
+    <number>2</number>
+    <title>The Second Chapter</title>
+    <p>Content004</p>
+    
+    <p>Content005</p>
+    
+    <p>Content006</p>
+    
+    <p>Content007</p>
+  <exercises-collated>
+      <collation class="vegetables-exercises">
+        <exercise class="vegetables">
+          <number>2.1</number>
+      <problem>
+        What color is an eggplant?
+        <ol>
+          <li>Salmon</li>
+          <li>Purple</li>
+          <li>Coral</li>
+          <li>Neon-yellow</li>
+        </ol>
+      </problem>
+      
+    </exercise>
+        <exercise class="vegetables">
+          <number>2.2</number>
+      <problem>
+        Where do potatoes grow?
+        <ol>
+          <li>Pants pockets</li>
+          <li>Only in Tunisia</li>
+          <li>The ground</li>
+          <li>Mr. Toad's Wild Ride</li>
+        </ol>
+      </problem>
+      
+    </exercise>
+      </collation>
+      <collation class="easy-math-exercises">
+        <exercise class="easy-math">
+          <number>2.3</number>
+      <problem>What is 8 - 5?</problem>
+      
+    </exercise>
+      </collation>
+    </exercises-collated>
+  </chapter>
+<solutions-collated>
+    <collation class="vegetables-solutions">
+      <solution-container>
+        <number>1.1</number>
+        <solution>Carrot</solution>
+      </solution-container>
+      <solution-container>
+        <number>2.1</number>
+        <solution>Purple</solution>
+      </solution-container>
+      <solution-container>
+        <number>2.2</number>
+        <solution>The ground</solution>
+      </solution-container>
+    </collation>
+    <collation class="easy-math-solutions">
+      <solution-container>
+        <number>1.2</number>
+        <solution>2</solution>
+      </solution-container>
+      <solution-container>
+        <number>1.3</number>
+        <solution>6</solution>
+      </solution-container>
+      <solution-container>
+        <number>2.3</number>
+        <solution>3</solution>
+      </solution-container>
+    </collation>
+  </solutions-collated>
+</book>

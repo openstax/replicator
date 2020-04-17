@@ -306,7 +306,10 @@ trait WriteInstructionProcessor {
   ) -> Result<(), SerializationError>;
 }
 
-struct XmlRsProcessor;
+struct XmlRsProcessor {
+  pad_self_closing: bool,
+  perform_indent: bool
+}
 use std::borrow::Cow;
 use xml::attribute::Attribute as AttributeEvent;
 use xml::name::Name;
@@ -320,6 +323,8 @@ impl XmlRsProcessor {
   ) -> Result<(), SerializationError> {
     let mut writer = EmitterConfig::new()
       .write_document_declaration(false)
+      .pad_self_closing(self.pad_self_closing)
+      .perform_indent(self.perform_indent)
       .create_writer(write);
     let mut cursor = 0;
     let mut ns_map: BTreeMap<String, String> = BTreeMap::new();
@@ -447,7 +452,13 @@ fn handle_request(
 ) -> RequestResult<()> {
   let mut request_string = String::new();
   stream.read_to_string(&mut request_string)?;
-  let request = serde_json::from_str(&request_string)?;
+  let request = match serde_json::from_str(&request_string) {
+    Ok(request) => request,
+    Err(err) => {
+      eprintln!("{}", request_string);
+      return Err(err.into())
+    }
+  };
 
   let response: Response = match request {
     Request::Selection { node_id, selector } => match ActionableSelector::from_string(selector) {
@@ -558,6 +569,13 @@ fn main() {
         .short('c')
         .takes_value(false)
         .help("Run node worker with coverage reporting"),
+    )
+    .arg(
+      Arg::with_name("pretty-print")
+        .long("pretty-print")
+        .short('p')
+        .takes_value(false)
+        .help("Pretty-print XML output"),
     )
     .arg(
       Arg::with_name("node-workers")
@@ -727,7 +745,10 @@ fn main() {
   );
   let results = unwrap_results(state_manager);
   let write_instruction_queue = document.to_write_instruction_queue(&results);
-  let processor = XmlRsProcessor;
+  let processor = XmlRsProcessor {
+    pad_self_closing: false,
+    perform_indent: matches.is_present("pretty-print")
+  };
   let writer: Box<dyn Write> = match matches.value_of("OUTFILE") {
     Some(file) => Box::new(fs::File::create(file).unwrap()),
     None => Box::new(std::io::stdout()),

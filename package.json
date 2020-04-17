@@ -28,6 +28,7 @@
     "@types/node": "^13.9.1",
     "@typescript-eslint/eslint-plugin": "2",
     "@typescript-eslint/parser": "^2.23.0",
+    "async": "^3.2.0",
     "async-sema": "^3.1.0",
     "ava": "^3.5.0",
     "eslint": "6",
@@ -38,6 +39,7 @@
     "eslint-plugin-promise": "4",
     "eslint-plugin-standard": "4",
     "fs-extra": "^9.0.0",
+    "lodash": "^4.17.15",
     "nyc": "^15.0.1",
     "source-map-support": "^0.5.16",
     "tmp-promise": "^2.0.2",
@@ -55,7 +57,6 @@
     ]
   },
   "dependencies": {
-    "async": "^3.2.0",
     "js-yaml": "^3.13.1",
     "worker-farm": "^1.7.0"
   }
