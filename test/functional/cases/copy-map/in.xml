@@ -1,4 +1,4 @@
-<root class="root">
+<root class="root" switch="1">
   <h2>Fruit</h2>
   <ol>
     <li>Apple</li>

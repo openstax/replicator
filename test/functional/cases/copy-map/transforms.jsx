@@ -10,8 +10,7 @@ module.exports.transforms = [
   }),
   new Transform('//root', 'default', async node => {
     return (
-      <Copy item={node} attrMap={{ 'class': () => null }}>
-        {'\n  '}
+      <Copy item={node} attrMap={{ 'class': () => null, 'switch': val => `${parseInt(val) ^ 1}` }}>
         <h2 class='document-title'>My Lists</h2>
         <ReplaceChildren item={node} mode='default' />
       </Copy>

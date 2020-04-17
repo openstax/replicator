@@ -148,7 +148,12 @@ export const queueWriteInstruction = async(name: string | ComponentFunction, att
     if (attributes != null) {
       const attributeInstructions = Object
         .entries(attributes)
-        .map(([key, value]) => new Attribute(QualifiedName.fromExpandedName(key), value as string))
+        .map(([key, value]) => {
+          if (value == null) {
+            throw new Error(`Attribute ${key} is missing a value`)
+          }
+          return new Attribute(QualifiedName.fromExpandedName(key), value as string)
+        })
       if (attributeInstructions.length > 0) {
         queue.push(new Attributes(attributeInstructions))
       }

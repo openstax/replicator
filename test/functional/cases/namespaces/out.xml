@@ -1,0 +1,5 @@
+<root xmlns:e="example.com">
+  <a>
+    <e:b/>
+  </a>
+</root>

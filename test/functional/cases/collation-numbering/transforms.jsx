@@ -1,5 +1,4 @@
 const { Transform, Fragment, Replace, ReplaceChildren, queueWriteInstruction, Copy } = require('replicator')
-const async = require('async')
 
 module.exports.transforms = [
   new Transform('//chapter', 'default', async (node, { getCount, allChapters, config }) => {
@@ -24,7 +23,7 @@ module.exports.transforms = [
       </Copy>
     )
   }),
-  new Transform('//book', 'default', async (node, {config, exerciseToNumberTuple}) => {
+  new Transform('//book', 'default', async (node, {config, exerciseToNumberTuple, exerciseToLink }) => {
     return (
       <Copy item={node}>
         <ReplaceChildren item={node} mode='default' />
@@ -39,6 +38,7 @@ module.exports.transforms = [
                   const solution = await exercise.selectOne('/solution')
                   return (
                     <solution-container>
+                      <a href={`#${exerciseToLink.get(exercise.id())}`}>Link to exercise</a>
                       <number>{`${chapterNumber}.${exerciseNumber}`}</number>
                       <Replace item={solution} mode='solution-collated' />
                     </solution-container>
@@ -54,10 +54,10 @@ module.exports.transforms = [
   new Transform('//exercise', 'default', async (node) => {
     return null
   }),
-  new Transform('//exercise', 'exercise-collated', async (node, { exerciseToNumberTuple }) => {
+  new Transform('//exercise', 'exercise-collated', async (node, { exerciseToNumberTuple, exerciseToLink }) => {
     const [chapterNumber, exerciseNumber] = exerciseToNumberTuple.get(node.id())
     return (
-      <Copy item={node}>
+      <Copy item={node} attrMap={{ 'id': () => exerciseToLink.get(node.id()) }}>
         <number>{`${chapterNumber}.${exerciseNumber}`}</number>
         <ReplaceChildren item={node} mode='exercise-collated' />
       </Copy>

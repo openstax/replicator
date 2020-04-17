@@ -19,11 +19,17 @@ module.exports.fixtures = async root => {
     })
   }
 
+  let idNext = 0
+  const generateId = () => {
+    idNext += 1
+    return `auto_${idNext}`
+  }
+
   const config = {
     exercises: [
       // The order of this list is taken to be the order in which end-of-chapter collations should appear
-      { type: 'vegetables', collateTo: 'chapter', collateSolutionsTo: 'book' },
-      { type: 'easy-math', collateTo: 'chapter', collateSolutionsTo: 'book' }
+      { type: 'vegetables' },
+      { type: 'easy-math' }
     ]
   }
 
@@ -33,6 +39,11 @@ module.exports.fixtures = async root => {
   const exerciseToClasses = new Map()
   await async.forEach(allExercises, async exercise => {
     exerciseToClasses.set(exercise.id(), await exercise.value('class'))
+  })
+
+  const exerciseToLink = new Map()
+  allExercises.forEach(exercise => {
+    exerciseToLink.set(exercise.id(), generateId())
   })
 
   const getEocExerciseOrder = node => {
@@ -57,6 +68,7 @@ module.exports.fixtures = async root => {
     getCount,
     allChapters,
     config,
-    exerciseToNumberTuple
+    exerciseToNumberTuple,
+    exerciseToLink
   }
 }
