@@ -101,9 +101,14 @@ impl DocumentWrapper {
   }
 
   fn deep_text(node: Node) -> String {
-    node.descendants()
+    node
+      .descendants()
       .filter_map(|descendant| {
-          if descendant.is_text() { descendant.text() } else { None }
+        if descendant.is_text() {
+          descendant.text()
+        } else {
+          None
+        }
       })
       .collect()
   }
@@ -308,7 +313,7 @@ trait WriteInstructionProcessor {
 
 struct XmlRsProcessor {
   pad_self_closing: bool,
-  perform_indent: bool
+  perform_indent: bool,
 }
 use std::borrow::Cow;
 use xml::attribute::Attribute as AttributeEvent;
@@ -456,7 +461,7 @@ fn handle_request(
     Ok(request) => request,
     Err(err) => {
       eprintln!("{}", request_string);
-      return Err(err.into())
+      return Err(err.into());
     }
   };
 
@@ -747,7 +752,7 @@ fn main() {
   let write_instruction_queue = document.to_write_instruction_queue(&results);
   let processor = XmlRsProcessor {
     pad_self_closing: false,
-    perform_indent: matches.is_present("pretty-print")
+    perform_indent: matches.is_present("pretty-print"),
   };
   let writer: Box<dyn Write> = match matches.value_of("OUTFILE") {
     Some(file) => Box::new(fs::File::create(file).unwrap()),

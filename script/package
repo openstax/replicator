@@ -1,15 +1,10 @@
 #!/usr/bin/env bash
 set -e
-npm run clean
-FIX=true npm run lint
-VERBOSE=true npm run test
 cd engine
 cargo fmt
 cargo clippy
-cargo test
 cd -
-npm run build
-npm run test:functional
+npm run test:all
 tarball_path=$(npm pack)
 mkdir -p dist
 tarball_dest="dist/${tarball_path}"
