@@ -215,8 +215,12 @@ export class Node {
     return this.broker.select(this.nodeID, selector)
   }
 
-  async selectOne(selector: string): Promise<Node> {
-    return (await this.broker.select(this.nodeID, selector))[0]
+  async selectOne(selector: string): Promise<Node | undefined> {
+    const selection = await this.broker.select(this.nodeID, selector)
+    if (selection.length === 0) {
+      return undefined
+    }
+    return selection[0]
   }
 
   async text(): Promise<string> {
@@ -226,7 +230,7 @@ export class Node {
   async value(name: QualifiedName | string): Promise<string | undefined> {
     const attributes = await this.broker.getAttributes(this.nodeID)
     const matchAgainst = typeof name === 'string'
-      ? new QualifiedName(name, '')
+      ? QualifiedName.fromExpandedName(name)
       : name
     const found = attributes.find(attr => attr.qName.equals(matchAgainst))
     return found == null ? found : found.value
@@ -238,6 +242,18 @@ export class Node {
 
   async children(): Promise<Array<Node>> {
     return this.select('/*')
+  }
+
+  async followLink(): Promise<Node | undefined> {
+    const hrefValue = await this.value('{}href')
+    if (hrefValue == null) {
+      return undefined
+    }
+    if (!hrefValue.startsWith('#')) {
+      return undefined
+    }
+    const root = await this.broker.getRoot()
+    return root.selectOne(`//[id==${JSON.stringify(hrefValue.slice(1))}]`)
   }
 
   isText(): boolean {

@@ -1,0 +1,4 @@
+<root>
+  <a id="an_id" data="some data" />
+  <b href="#an_id" />
+</root>
