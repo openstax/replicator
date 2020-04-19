@@ -74,10 +74,10 @@ impl DocumentWrapper {
 
   fn select(&self, id: usize, selector: &ActionableSelector) -> Vec<usize> {
     self.rent(|document| {
-      resolve_selector(document.nth_node(id).unwrap(), selector)
+      resolve_selector(document.get_node(id.into()).unwrap(), selector)
         .iter()
         .filter_map(|node| match node.node_type() {
-          NodeType::Element | NodeType::Text | NodeType::Root => Some(node.order_in_document()),
+          NodeType::Element | NodeType::Text | NodeType::Root => Some(node.id().get_usize()),
           _ => None,
         })
         .collect()
@@ -86,7 +86,7 @@ impl DocumentWrapper {
 
   fn qualified_name(&self, id: usize) -> QualifiedName {
     self.rent(|document| {
-      let node = document.nth_node(id).unwrap();
+      let node = document.get_node(id.into()).unwrap();
       let tag = node.tag_name();
       QualifiedName {
         uri: tag.namespace().unwrap_or("").to_owned(),
@@ -110,14 +110,14 @@ impl DocumentWrapper {
 
   fn text(&self, id: usize) -> String {
     self.rent(|document| {
-      let node = document.nth_node(id).unwrap();
+      let node = document.get_node(id.into()).unwrap();
       Self::deep_text(node)
     })
   }
 
   fn attributes(&self, id: usize) -> Vec<Attribute> {
     self.rent(|document| {
-      let node = document.nth_node(id).unwrap();
+      let node = document.get_node(id.into()).unwrap();
       node
         .attributes()
         .iter()
@@ -249,7 +249,7 @@ fn queue_self_or_map<'a, 'b: 'a>(
   mode: &str,
   mapping: &ReplacementMapping,
 ) {
-  let instructions_from_map = mapping.get(&(node.order_in_document(), mode.to_owned()));
+  let instructions_from_map = mapping.get(&(node.id().get_usize(), mode.to_owned()));
   if let Some(instructions) = instructions_from_map {
     instructions.iter().for_each(|instruction| {
       match instruction {
@@ -259,7 +259,7 @@ fn queue_self_or_map<'a, 'b: 'a>(
         } => queue_self_or_map(
           doc,
           queue,
-          doc.nth_node(*replace_node_id).unwrap(),
+          doc.get_node((*replace_node_id).into()).unwrap(),
           replace_mode,
           mapping,
         ),
