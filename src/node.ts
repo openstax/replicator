@@ -1,6 +1,7 @@
 import { Socket } from 'net'
 import path from 'path'
 import { TransformResult } from './client'
+import { Sema } from 'async-sema'
 
 export class QualifiedName {
   localName: string
@@ -91,10 +92,12 @@ const reportErrorRequest = (error: Error): string => {
 export class UnixSocketBroker implements Broker {
   socketFile: string
   count: number
+  socketLock: Sema
 
   constructor(socketFile: string) {
     this.socketFile = path.resolve(socketFile)
     this.count = 0
+    this.socketLock = new Sema(require('os').cpus().length * 2)
   }
 
   async select(nodeID: number, selector: string): Promise<Array<Node>> {
@@ -139,12 +142,14 @@ export class UnixSocketBroker implements Broker {
   }
 
   async socketConnectionOneWay(payload: string): Promise<void> {
+    await this.socketLock.acquire()
     return new Promise((resolve, reject) => {
       const connection: Socket = new Socket()
         .on('connect', () => {
           connection.end(payload)
         })
         .on('end', () => {
+          this.socketLock.release()
           resolve(undefined)
         })
         .on('error', (err: any) => {
@@ -153,6 +158,7 @@ export class UnixSocketBroker implements Broker {
             return
           }
           connection.destroy()
+          this.socketLock.release()
           reject(err)
         })
         .connect(this.socketFile)
@@ -160,6 +166,7 @@ export class UnixSocketBroker implements Broker {
   }
 
   async socketConnection(payload: string): Promise<any> {
+    await this.socketLock.acquire()
     return new Promise((resolve, reject) => {
       const buffers: Array<Buffer> = []
       const connection = new Socket()
@@ -172,6 +179,7 @@ export class UnixSocketBroker implements Broker {
         .on('end', () => {
           const responseString = Buffer.concat(buffers).toString()
           const responseObj = JSON.parse(responseString)
+          this.socketLock.release()
           if (responseObj?.B?.r != null) {
             reject(new Error(responseObj.B.r))
           }
@@ -182,6 +190,8 @@ export class UnixSocketBroker implements Broker {
             connection.connect(this.socketFile)
             return
           }
+          connection.destroy()
+          this.socketLock.release()
           reject(err)
         })
         .connect(this.socketFile)
