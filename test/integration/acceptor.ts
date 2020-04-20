@@ -149,9 +149,9 @@ test('error_reported_when_occurs', async t => {
   const tranformFirst = new Transform('//div-one', 'default', () => {
     throw new Error('an error')
   })
-  await t.throwsAsync(async() => {
-    await resolveTransforms([tranformFirst], mockBroker, {})
-  })
+
+  await resolveTransforms([tranformFirst], mockBroker, {})
+
   t.false(mockBroker.completed)
   t.truthy(mockBroker.error)
 })

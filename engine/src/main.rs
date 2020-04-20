@@ -15,7 +15,7 @@ use roxmltree::{Document, Node, NodeType};
 use std::ops::Deref;
 
 // general
-use std::collections::{BTreeMap, HashMap, VecDeque};
+use std::collections::{BTreeMap, HashMap, HashSet, VecDeque};
 use std::process::{Command, Stdio};
 
 // parallelism/concurrency
@@ -493,9 +493,10 @@ fn handle_request(
       let state_results = &mut locked_manager.results;
       let mut races_in_results = vec![];
       for result in results {
-        if let Some((other_selector, _other_instructions)) = state_results
-          .insert((result.node_id, result.mode), (result.selector.clone(), result.instructions))
-        {
+        if let Some((other_selector, _other_instructions)) = state_results.insert(
+          (result.node_id, result.mode),
+          (result.selector.clone(), result.instructions),
+        ) {
           races_in_results.push((other_selector, result.selector));
         }
       }
@@ -533,7 +534,7 @@ struct StateManager {
   progress: usize,
   completed: bool,
   error: Option<RequestError>,
-  races: Vec<(String, String)>,
+  races: HashSet<(String, String)>,
 }
 
 fn unwrap_results(state_manager: Arc<Mutex<StateManager>>) -> ReplacementMapping {
@@ -658,7 +659,7 @@ fn main() {
     progress: 0,
     completed: false,
     error: None,
-    races: vec![],
+    races: HashSet::new(),
   }));
 
   let progress_bar = ProgressBar::hidden();
@@ -715,7 +716,7 @@ fn main() {
     eprintln!("Results: {:?}", locked_manager.results.iter().count());
     eprintln!(
       "Races: {:?}",
-      if locked_manager.races.len() > 0 {
+      if !locked_manager.races.is_empty() {
         &not_good_style
       } else {
         &good_style
