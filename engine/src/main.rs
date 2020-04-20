@@ -680,7 +680,9 @@ fn main() {
           if let Err(err) = handle_request(&document, stream, state_manager.clone()) {
             let state_manager_clone = state_manager.clone();
             let mut locked_manager = state_manager_clone.lock().unwrap();
-            locked_manager.error = Some(err);
+            if locked_manager.error.is_none() {
+              locked_manager.error = Some(err);
+            }
           }
         });
       }
