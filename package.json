@@ -1,7 +1,7 @@
 {
   "name": "replicator-xml",
   "description": "A speedy XML replacement-baking processor",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "main": "build/src/client.js",
   "bin": "build/src/replicator-engine",
   "files": [
