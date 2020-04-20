@@ -246,7 +246,7 @@ impl From<&roxmltree::Namespace<'_>> for Namespace {
   }
 }
 
-type ReplacementMapping = HashMap<(usize, String), Vec<WriteInstruction>>;
+type ReplacementMapping = HashMap<(usize, String), (String, Vec<WriteInstruction>)>;
 fn queue_self_or_map<'a, 'b: 'a>(
   doc: &Document,
   queue: &mut Vec<WriteInstruction>,
@@ -254,8 +254,7 @@ fn queue_self_or_map<'a, 'b: 'a>(
   mode: &str,
   mapping: &ReplacementMapping,
 ) {
-  let instructions_from_map = mapping.get(&(node.id().get_usize(), mode.to_owned()));
-  if let Some(instructions) = instructions_from_map {
+  if let Some((_selector, instructions)) = mapping.get(&(node.id().get_usize(), mode.to_owned())) {
     instructions.iter().for_each(|instruction| {
       match instruction {
         WriteInstruction::Replace {
@@ -492,16 +491,15 @@ fn handle_request(
     Request::PutResults { results } => {
       let mut locked_manager = state_manager.lock().unwrap();
       let state_results = &mut locked_manager.results;
-      let mut races = 0;
+      let mut races_in_results = vec![];
       for result in results {
-        if state_results
-          .insert((result.node_id, result.mode), result.instructions)
-          .is_some()
+        if let Some((other_selector, _other_instructions)) = state_results
+          .insert((result.node_id, result.mode), (result.selector.clone(), result.instructions))
         {
-          races += 1;
+          races_in_results.push((other_selector, result.selector));
         }
       }
-      locked_manager.race_count += races;
+      locked_manager.races.extend(races_in_results);
       locked_manager.progress += 1;
       return Ok(());
     }
@@ -535,7 +533,7 @@ struct StateManager {
   progress: usize,
   completed: bool,
   error: Option<RequestError>,
-  race_count: usize,
+  races: Vec<(String, String)>,
 }
 
 fn unwrap_results(state_manager: Arc<Mutex<StateManager>>) -> ReplacementMapping {
@@ -632,6 +630,7 @@ fn main() {
   } else {
     Command::new("node")
       .args(&[
+        "--unhandled-rejections=strict",
         path_to_js.to_str().unwrap(),
         socket_path.to_str().unwrap(),
         manifest_file_path.to_str().unwrap(),
@@ -659,7 +658,7 @@ fn main() {
     progress: 0,
     completed: false,
     error: None,
-    race_count: 0,
+    races: vec![],
   }));
 
   let progress_bar = ProgressBar::hidden();
@@ -716,12 +715,12 @@ fn main() {
     eprintln!("Results: {:?}", locked_manager.results.iter().count());
     eprintln!(
       "Races: {:?}",
-      if locked_manager.race_count > 0 {
+      if locked_manager.races.len() > 0 {
         &not_good_style
       } else {
         &good_style
       }
-      .apply_to(locked_manager.race_count)
+      .apply_to(&locked_manager.races)
     );
     match locked_manager.error {
       Some(ref err) => eprintln!("Error: {}", not_good_style.apply_to(err)),

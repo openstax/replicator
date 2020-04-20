@@ -67,6 +67,7 @@ const reportResultRequest = (results: Array<TransformResult>): string => {
         return {
           n: transformResult.nodeID,
           m: transformResult.mode,
+          s: transformResult.selector,
           i: transformResult.instructions.map(instruction => instruction.toRequestObj())
         }
       })

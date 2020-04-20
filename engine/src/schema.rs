@@ -38,6 +38,8 @@ pub(crate) struct TransformResult {
   pub(crate) node_id: usize,
   #[serde(rename = "m")]
   pub(crate) mode: String,
+  #[serde(rename = "s")]
+  pub(crate) selector: String,
   #[serde(rename = "i")]
   pub(crate) instructions: Vec<WriteInstruction>,
 }

@@ -11,8 +11,10 @@ export const resolveTransforms = async(transforms: Array<Transform>, broker: Bro
       await broker.reportResults(await transform.resolve(root, fixtures))
     })
   } catch (err) {
-    await broker.reportError(err)
-    throw err
+    await broker.reportError(err).catch(err => {
+      console.error('Uh oh! Error occurred while reporting error!')
+      throw err
+    })
   }
 }
 

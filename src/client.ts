@@ -27,7 +27,7 @@ export class Transform {
     const replaced = await root.select(this.selector)
     // eslint-disable-next-line @typescript-eslint/no-misused-promises
     return async.map(replaced, async node => {
-      return new TransformResult(node.nodeID, this.mode, await this.replace(node, fixtures))
+      return new TransformResult(node.nodeID, this.mode, this.selector, await this.replace(node, fixtures))
     })
   }
 }
@@ -35,11 +35,13 @@ export class Transform {
 export class TransformResult {
   nodeID: number
   mode: string
+  selector: string
   instructions: Array<WriteInstruction>
 
-  constructor(nodeID: number, mode: string, instructions?: Array<WriteInstruction>) {
+  constructor(nodeID: number, mode: string, selector: string, instructions?: Array<WriteInstruction>) {
     this.nodeID = nodeID
     this.mode = mode
+    this.selector = selector
     this.instructions = instructions ?? []
   }
 }
