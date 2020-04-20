@@ -47,10 +47,10 @@ process.on('exit', () => {
 
 const shimRequires = code => {
   return code
-    .replace(/require\(['](?!replicator)(.*?)[']\)/g, (_, p1) => `require('${PROJECT_DEPS}/${p1}')`)
-    .replace(/require\(["](?!replicator)(.*?)["]\)/g, (_, p1) => `require('${PROJECT_DEPS}/${p1}')`)
-    .replace(/require\([']replicator[']\)/g, `require('${PROJECT_MAIN}')`)
-    .replace(/require\(["]replicator["]\)/g, `require('${PROJECT_MAIN}')`)
+    .replace(/require\(['](?!replicator-xml)(.*?)[']\)/g, (_, p1) => `require('${PROJECT_DEPS}/${p1}')`)
+    .replace(/require\(["](?!replicator-xml)(.*?)["]\)/g, (_, p1) => `require('${PROJECT_DEPS}/${p1}')`)
+    .replace(/require\([']replicator-xml[']\)/g, `require('${PROJECT_MAIN}')`)
+    .replace(/require\(["]replicator-xml["]\)/g, `require('${PROJECT_MAIN}')`)
 }
 
 const runCase = async (t, name) => {
